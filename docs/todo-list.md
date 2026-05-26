@@ -1,6 +1,6 @@
 ### Planejamento
 - [X] Definição e documentação das regras de negócio
-- [ ] Modelagem do banco de dados
+- [X] Modelagem do banco de dados
 
 ### Backend
 - [ ] Setup do projeto e estrutura de camadas
