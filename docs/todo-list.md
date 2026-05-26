@@ -1,5 +1,5 @@
 ### Planejamento
-- [ ] Definição e documentação das regras de negócio
+- [X] Definição e documentação das regras de negócio
 - [ ] Modelagem do banco de dados
 
 ### Backend
