@@ -1,5 +1,15 @@
+# Env
 .env
 
+# Frontend
 dist
-
 node_modules
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Secrets — use variáveis de ambiente ou user secrets no lugar
+appsettings.*.local.json

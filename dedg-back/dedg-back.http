@@ -1,0 +1,6 @@
+@dedg_back_HostAddress = http://localhost:5101
+
+GET {{dedg_back_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
