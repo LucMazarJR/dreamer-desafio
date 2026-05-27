@@ -9,7 +9,7 @@
 - [X] Implementação dos end points
 - [X] Validação e regras de negócio
 - [ ] Implementação de testes
-- [ ] Documentação da API
+- [X] Documentação da API
 
 
 ### Frontend
