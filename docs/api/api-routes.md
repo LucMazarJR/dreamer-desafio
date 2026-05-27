@@ -37,7 +37,7 @@ Autentica o usuário e retorna um token JWT. Rota pública, não requer autentic
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
-  "expiresAt": "2025-01-15T16:00:00Z",
+  "expiresAt": "2026-05-27T16:00:00Z",
   "userId": 1,
   "name": "João Silva",
   "role": "Collaborator"
@@ -52,6 +52,35 @@ Autentica o usuário e retorna um token JWT. Rota pública, não requer autentic
 
 ---
 
+### `GET /api/auth/me`
+Retorna os dados do usuário autenticado com base no token JWT. Útil para o frontend carregar o perfil do usuário logado sem precisar armazenar o ID separadamente.
+
+**Permissão:** qualquer usuário autenticado
+
+**Response** `200 OK`
+```json
+{
+  "id": 1,
+  "name": "João Silva",
+  "email": "joao@empresa.com",
+  "role": "Collaborator",
+  "cpf": "123.456.789-00",
+  "timeZone": "UTC-3",
+  "managerId": 2,
+  "isActive": true,
+  "createdAt": "2026-01-15T10:00:00Z"
+}
+```
+
+**Responses**
+| Status | Descrição |
+|--------|-----------|
+| `200 OK` | Dados do usuário autenticado |
+| `401 Unauthorized` | Token inválido ou ausente |
+| `404 Not Found` | Usuário não encontrado |
+
+---
+
 ## Recursos
 
 - [Users](#users-apiusers)
@@ -63,7 +92,18 @@ Autentica o usuário e retorna um token JWT. Rota pública, não requer autentic
 ## Users `/api/users`
 
 ### `GET /api/users`
-Retorna todos os usuários ativos.
+Retorna todos os usuários ativos. Aceita filtro opcional por gestor via query param.
+
+**Permissão:** `Manager`, `HrAdmin`
+
+**Query params**
+| Nome | Tipo | Obrigatório | Descrição |
+|------|------|-------------|-----------|
+| `managerId` | `int` | ❌ | Filtra pelos colaboradores de um gestor específico |
+
+Exemplos:
+- `GET /api/users`, retorna todos os usuários ativos
+- `GET /api/users?managerId=2`, retorna apenas os colaboradores do gestor 2
 
 **Response** `200 OK`
 ```json
@@ -74,10 +114,10 @@ Retorna todos os usuários ativos.
     "email": "joao@empresa.com",
     "role": "Collaborator",
     "cpf": "123.456.789-00",
-    "timeZone": "America/Sao_Paulo",
+    "timeZone": "UTC-3",
     "managerId": 2,
     "isActive": true,
-    "createdAt": "2025-01-15T10:00:00Z"
+    "createdAt": "2026-01-15T10:00:00Z"
   }
 ]
 ```
@@ -86,6 +126,8 @@ Retorna todos os usuários ativos.
 
 ### `GET /api/users/{id}`
 Retorna um usuário pelo ID. Retorna `404` se o usuário não existir ou estiver inativo.
+
+**Permissão:** qualquer usuário autenticado
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -103,6 +145,8 @@ Retorna um usuário pelo ID. Retorna `404` se o usuário não existir ou estiver
 ### `POST /api/users`
 Cria um novo usuário. A senha é recebida em texto puro e armazenada com BCrypt.
 
+**Permissão:** `HrAdmin`
+
 **Request body**
 ```json
 {
@@ -111,7 +155,7 @@ Cria um novo usuário. A senha é recebida em texto puro e armazenada com BCrypt
   "password": "senhaSegura123",
   "role": "Collaborator",
   "cpf": "123.456.789-00",
-  "timeZone": "America/Sao_Paulo",
+  "timeZone": "UTC-3",
   "managerId": 2
 }
 ```
@@ -123,18 +167,21 @@ Cria um novo usuário. A senha é recebida em texto puro e armazenada com BCrypt
 | `password` | `string` | ✅ | Senha em texto puro, armazenada com BCrypt |
 | `role` | `string` | ✅ | Perfil do usuário (`Collaborator`, `Manager`, `HrAdmin`) |
 | `cpf` | `string` | ❌ | CPF |
-| `timeZone` | `string` | ✅ | Fuso horário no formato IANA (ex: `America/Sao_Paulo`) |
+| `timeZone` | `string` | ✅ | Fuso horário no formato UTC offset (ex: `UTC-3`, `UTC+1`) |
 | `managerId` | `int` | ❌ | ID do gestor responsável |
 
 **Responses**
 | Status | Descrição |
 |--------|-----------|
 | `201 Created` | Usuário criado, retorna o recurso criado |
+| `400 Bad Request` | E-mail já cadastrado ou gestor informado inválido |
 
 ---
 
 ### `PUT /api/users/{id}`
 Atualiza os dados de um usuário. Todos os campos são opcionais, apenas os campos enviados são alterados.
+
+**Permissão:** `HrAdmin`
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -146,7 +193,7 @@ Atualiza os dados de um usuário. Todos os campos são opcionais, apenas os camp
 {
   "name": "João Silva Atualizado",
   "email": "novo@empresa.com",
-  "timeZone": "Europe/Lisbon",
+  "timeZone": "UTC+1",
   "managerId": 3,
   "isActive": true
 }
@@ -156,7 +203,7 @@ Atualiza os dados de um usuário. Todos os campos são opcionais, apenas os camp
 |-------|------|-----------|
 | `name` | `string` | Nome completo |
 | `email` | `string` | E-mail |
-| `timeZone` | `string` | Fuso horário no formato IANA |
+| `timeZone` | `string` | Fuso horário no formato UTC offset |
 | `managerId` | `int` | ID do gestor responsável |
 | `isActive` | `bool` | Status do usuário |
 
@@ -165,11 +212,14 @@ Atualiza os dados de um usuário. Todos os campos são opcionais, apenas os camp
 |--------|-----------|
 | `200 OK` | Usuário atualizado, retorna o recurso atualizado |
 | `404 Not Found` | Usuário não encontrado |
+| `400 Bad Request` | E-mail já em uso ou gestor informado inválido |
 
 ---
 
 ### `DELETE /api/users/{id}`
 Remove um usuário via soft delete, marcando `isActive` como `false`. O registro é mantido no banco.
+
+**Permissão:** `HrAdmin`
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -189,6 +239,8 @@ Remove um usuário via soft delete, marcando `isActive` como `false`. O registro
 ### `GET /api/timeevents`
 Retorna todos os registros de ponto. Aceita filtro opcional por usuário via query param.
 
+**Permissão:** qualquer usuário autenticado
+
 **Query params**
 | Nome | Tipo | Obrigatório | Descrição |
 |------|------|-------------|-----------|
@@ -205,19 +257,67 @@ Exemplos:
     "id": 1,
     "userId": 1,
     "eventType": "Entry",
-    "recordedAt": "2025-01-15T08:00:00Z",
-    "timezoneAtRecording": "America/Sao_Paulo",
+    "recordedAt": "2026-05-27T08:00:00Z",
+    "timezoneAtRecording": "UTC-3",
     "isTravel": false,
     "observation": "home office",
-    "createdAt": "2025-01-15T08:00:00Z"
+    "createdAt": "2026-05-27T08:00:00Z"
   }
 ]
 ```
 
 ---
 
+### `GET /api/timeevents/summary`
+Retorna um resumo da jornada do colaborador em um mês específico, com o total de horas trabalhadas, horas extras e banco negativo. O cálculo considera pares entrada/saída e desconta os intervalos registrados.
+
+**Permissão:** qualquer usuário autenticado
+
+**Query params**
+| Nome | Tipo | Obrigatório | Descrição |
+|------|------|-------------|-----------|
+| `userId` | `int` | ✅ | ID do colaborador |
+| `year` | `int` | ✅ | Ano (ex: `2026`) |
+| `month` | `int` | ✅ | Mês de 1 a 12 |
+
+Exemplo: `GET /api/timeevents/summary?userId=1&year=2026&month=5`
+
+**Response** `200 OK`
+```json
+{
+  "userId": 1,
+  "year": 2026,
+  "month": 5,
+  "daysWorked": 20,
+  "totalWorkedMinutes": 9800,
+  "totalExpectedMinutes": 9600,
+  "overtimeMinutes": 200,
+  "negativeMinutes": 0,
+  "periodStatus": "Open"
+}
+```
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `daysWorked` | `int` | Dias com par entrada/saída completo |
+| `totalWorkedMinutes` | `int` | Total de minutos trabalhados no mês |
+| `totalExpectedMinutes` | `int` | Total esperado (dias trabalhados × 480 min) |
+| `overtimeMinutes` | `int` | Minutos acima do esperado |
+| `negativeMinutes` | `int` | Minutos abaixo do esperado |
+| `periodStatus` | `string` | Status do período (`Open`, `InReview`, `Closed`, `NoPeriod`) |
+
+**Responses**
+| Status | Descrição |
+|--------|-----------|
+| `200 OK` | Resumo calculado |
+| `404 Not Found` | Usuário não encontrado ou inativo |
+
+---
+
 ### `GET /api/timeevents/{id}`
 Retorna um registro de ponto pelo ID.
+
+**Permissão:** qualquer usuário autenticado
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -233,15 +333,17 @@ Retorna um registro de ponto pelo ID.
 ---
 
 ### `POST /api/timeevents`
-Cria um novo registro de ponto. `recordedAt` deve ser enviado em UTC.
+Cria um novo registro de ponto. `recordedAt` deve ser enviado em UTC. Retorna erro se o período do mês estiver fechado.
+
+**Permissão:** qualquer usuário autenticado
 
 **Request body**
 ```json
 {
   "userId": 1,
   "eventType": "Entry",
-  "recordedAt": "2025-01-15T08:00:00Z",
-  "timezoneAtRecording": "America/Sao_Paulo",
+  "recordedAt": "2026-05-27T08:00:00Z",
+  "timezoneAtRecording": "UTC-3",
   "isTravel": false,
   "observation": "home office"
 }
@@ -252,7 +354,7 @@ Cria um novo registro de ponto. `recordedAt` deve ser enviado em UTC.
 | `userId` | `int` | ✅ | ID do colaborador |
 | `eventType` | `string` | ✅ | Tipo do evento (`Entry`, `Exit`, `BreakStart`, `BreakEnd`) |
 | `recordedAt` | `datetime` | ✅ | Momento do registro em UTC |
-| `timezoneAtRecording` | `string` | ✅ | Fuso horário no momento do registro, formato IANA |
+| `timezoneAtRecording` | `string` | ✅ | Fuso horário no momento do registro, formato UTC offset (ex: `UTC-3`) |
 | `isTravel` | `bool` | ❌ | Indica se o colaborador estava em deslocamento. Padrão: `false` |
 | `observation` | `string` | ❌ | Observação livre |
 
@@ -260,12 +362,15 @@ Cria um novo registro de ponto. `recordedAt` deve ser enviado em UTC.
 | Status | Descrição |
 |--------|-----------|
 | `201 Created` | Registro criado, retorna o recurso criado |
-| `400 Bad Request` | Dados inválidos |
+| `400 Bad Request` | Período do mês está fechado |
+| `404 Not Found` | Usuário não encontrado ou inativo |
 
 ---
 
 ### `PUT /api/timeevents/{id}`
-Atualiza um registro de ponto. Todos os campos são opcionais, apenas os campos enviados são alterados.
+Atualiza um registro de ponto. Todos os campos são opcionais, apenas os campos enviados são alterados. Retorna erro se o período do mês estiver fechado.
+
+**Permissão:** `Manager`, `HrAdmin`
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -276,8 +381,8 @@ Atualiza um registro de ponto. Todos os campos são opcionais, apenas os campos 
 ```json
 {
   "eventType": "Exit",
-  "recordedAt": "2025-01-15T17:00:00Z",
-  "timezoneAtRecording": "America/Sao_Paulo",
+  "recordedAt": "2026-05-27T17:00:00Z",
+  "timezoneAtRecording": "UTC-3",
   "isTravel": false,
   "observation": "saída ajustada"
 }
@@ -287,7 +392,7 @@ Atualiza um registro de ponto. Todos os campos são opcionais, apenas os campos 
 |-------|------|-----------|
 | `eventType` | `string` | Tipo do evento (`Entry`, `Exit`, `BreakStart`, `BreakEnd`) |
 | `recordedAt` | `datetime` | Momento do registro em UTC |
-| `timezoneAtRecording` | `string` | Fuso horário no momento do registro, formato IANA |
+| `timezoneAtRecording` | `string` | Fuso horário no momento do registro, formato UTC offset |
 | `isTravel` | `bool` | Indica se o colaborador estava em deslocamento |
 | `observation` | `string` | Observação livre |
 
@@ -295,12 +400,15 @@ Atualiza um registro de ponto. Todos os campos são opcionais, apenas os campos 
 | Status | Descrição |
 |--------|-----------|
 | `200 OK` | Registro atualizado, retorna o recurso atualizado |
+| `400 Bad Request` | Período do mês está fechado |
 | `404 Not Found` | Registro não encontrado |
 
 ---
 
 ### `DELETE /api/timeevents/{id}`
-Remove um registro de ponto.
+Remove um registro de ponto. Retorna erro se o período do mês estiver fechado.
+
+**Permissão:** `Manager`, `HrAdmin`
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -311,6 +419,7 @@ Remove um registro de ponto.
 | Status | Descrição |
 |--------|-----------|
 | `204 No Content` | Removido com sucesso |
+| `400 Bad Request` | Período do mês está fechado |
 | `404 Not Found` | Registro não encontrado |
 
 ---
@@ -320,13 +429,15 @@ Remove um registro de ponto.
 ### `GET /api/monthlyperiods`
 Retorna todos os períodos mensais cadastrados.
 
+**Permissão:** qualquer usuário autenticado
+
 **Response** `200 OK`
 ```json
 [
   {
     "id": 1,
-    "year": 2025,
-    "month": 1,
+    "year": 2026,
+    "month": 5,
     "status": "Open",
     "closedById": null,
     "closedAt": null
@@ -338,6 +449,8 @@ Retorna todos os períodos mensais cadastrados.
 
 ### `GET /api/monthlyperiods/{id}`
 Retorna um período mensal pelo ID.
+
+**Permissão:** qualquer usuário autenticado
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -355,13 +468,15 @@ Retorna um período mensal pelo ID.
 ### `GET /api/monthlyperiods/by-date/{year}/{month}`
 Retorna o período de um mês específico consultando por ano e mês.
 
+**Permissão:** qualquer usuário autenticado
+
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
 |------|------|-----------|
-| `year` | `int` | Ano (ex: `2025`) |
+| `year` | `int` | Ano (ex: `2026`) |
 | `month` | `int` | Mês de 1 a 12 |
 
-Exemplo: `GET /api/monthlyperiods/by-date/2025/1`
+Exemplo: `GET /api/monthlyperiods/by-date/2026/5`
 
 **Responses**
 | Status | Descrição |
@@ -374,11 +489,13 @@ Exemplo: `GET /api/monthlyperiods/by-date/2025/1`
 ### `POST /api/monthlyperiods`
 Cria um novo período mensal. Retorna erro se já existir um período para o mesmo mês e ano.
 
+**Permissão:** `HrAdmin`
+
 **Request body**
 ```json
 {
-  "year": 2025,
-  "month": 1
+  "year": 2026,
+  "month": 5
 }
 ```
 
@@ -396,7 +513,9 @@ Cria um novo período mensal. Retorna erro se já existir um período para o mes
 ---
 
 ### `PUT /api/monthlyperiods/{id}`
-Atualiza o status de um período. Usado para avançar o fluxo de fechamento mensal.
+Atualiza o status de um período. Usado para avançar o fluxo de fechamento mensal. As transições permitidas são `Open → InReview`, `Open → Closed` e `InReview → Closed`. O status `Closed` é terminal.
+
+**Permissão:** `Manager`, `HrAdmin`
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -420,12 +539,15 @@ Atualiza o status de um período. Usado para avançar o fluxo de fechamento mens
 | Status | Descrição |
 |--------|-----------|
 | `200 OK` | Período atualizado, retorna o recurso atualizado |
+| `400 Bad Request` | Transição de status inválida |
 | `404 Not Found` | Período não encontrado |
 
 ---
 
 ### `DELETE /api/monthlyperiods/{id}`
-Remove um período mensal.
+Remove um período mensal. Períodos com status `Closed` não podem ser removidos.
+
+**Permissão:** `HrAdmin`
 
 **Parâmetros de rota**
 | Nome | Tipo | Descrição |
@@ -436,4 +558,5 @@ Remove um período mensal.
 | Status | Descrição |
 |--------|-----------|
 | `204 No Content` | Removido com sucesso |
+| `400 Bad Request` | Período fechado não pode ser removido |
 | `404 Not Found` | Período não encontrado |

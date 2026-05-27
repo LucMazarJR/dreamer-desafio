@@ -7,7 +7,7 @@
 - [X] Configuração do banco e migrations
 - [X] Autenticação com JWT
 - [X] Implementação dos end points
-- [ ] Validação e regras de negócio
+- [X] Validação e regras de negócio
 - [ ] Implementação de testes
 - [ ] Documentação da API
 
