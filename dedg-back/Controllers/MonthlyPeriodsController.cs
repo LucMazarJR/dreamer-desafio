@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using dedg_back.Exceptions;
 using dedg_back.Services;
 using dedg_back.Models.DTOs;
 
@@ -61,7 +62,7 @@ public class MonthlyPeriodsController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -75,9 +76,13 @@ public class MonthlyPeriodsController : ControllerBase
             var period = await _monthlyPeriodService.UpdateMonthlyPeriodAsync(id, dto);
             return Ok(period);
         }
-        catch (InvalidOperationException)
+        catch (NotFoundException ex)
         {
-            return NotFound();
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -90,9 +95,13 @@ public class MonthlyPeriodsController : ControllerBase
             await _monthlyPeriodService.DeleteMonthlyPeriodAsync(id);
             return NoContent();
         }
-        catch (InvalidOperationException)
+        catch (NotFoundException ex)
         {
-            return NotFound();
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 }

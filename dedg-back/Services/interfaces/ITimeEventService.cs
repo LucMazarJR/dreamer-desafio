@@ -9,4 +9,5 @@ public interface ITimeEventService
     Task<TimeEventResponseDto> CreateTimeEventAsync(CreateTimeEventDto dto);
     Task<TimeEventResponseDto> UpdateTimeEventAsync(int id, UpdateTimeEventDto dto);
     Task DeleteTimeEventAsync(int id);
+    Task<TimeEventSummaryDto> GetSummaryAsync(int userId, int year, int month);
 }

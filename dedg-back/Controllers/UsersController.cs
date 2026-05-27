@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using dedg_back.Exceptions;
 using dedg_back.Services;
 using dedg_back.Models.DTOs;
 
@@ -17,11 +18,12 @@ public class UsersController : ControllerBase
     }
 
     // Gestor e RH consultam usuários — colaborador vê apenas o próprio perfil via GET /{id}
+    // Gestor filtra pelo próprio ID para ver apenas seu time: ?managerId={id}
     [HttpGet]
     [Authorize(Roles = "Manager,HrAdmin")]
-    public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetUsers()
+    public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetUsers([FromQuery] int? managerId)
     {
-        var users = await _userService.GetUsersAsync();
+        var users = await _userService.GetUsersAsync(managerId);
         return Ok(users);
     }
 
@@ -43,8 +45,15 @@ public class UsersController : ControllerBase
     [Authorize(Roles = "HrAdmin")]
     public async Task<ActionResult<UserResponseDto>> CreateUser(CreateUserDto dto)
     {
-        var user = await _userService.CreateUserAsync(dto);
-        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+        try
+        {
+            var user = await _userService.CreateUserAsync(dto);
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     // Fuso horário e dados do colaborador são gerenciados pelo RH
@@ -57,9 +66,13 @@ public class UsersController : ControllerBase
             var user = await _userService.UpdateUserAsync(id, dto);
             return Ok(user);
         }
-        catch (InvalidOperationException)
+        catch (NotFoundException ex)
         {
-            return NotFound();
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -72,9 +85,9 @@ public class UsersController : ControllerBase
             await _userService.DeleteUserAsync(id);
             return NoContent();
         }
-        catch (InvalidOperationException)
+        catch (NotFoundException ex)
         {
-            return NotFound();
+            return NotFound(new { message = ex.Message });
         }
     }
 }

@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using dedg_back.Data;
+using dedg_back.Exceptions;
 using dedg_back.Models.Entities;
 using dedg_back.Models.DTOs;
+using dedg_back.Models.Enums;
 
 namespace dedg_back.Services;
 
@@ -9,6 +11,14 @@ public class MonthlyPeriodService : IMonthlyPeriodService
 {
     private readonly AppDbContext _context;
     private readonly ILogger<MonthlyPeriodService> _logger;
+
+    // Transições de status permitidas
+    private static readonly Dictionary<PeriodStatus, PeriodStatus[]> AllowedTransitions = new()
+    {
+        [PeriodStatus.Open]     = [PeriodStatus.InReview, PeriodStatus.Closed],
+        [PeriodStatus.InReview] = [PeriodStatus.Closed],
+        [PeriodStatus.Closed]   = []
+    };
 
     public MonthlyPeriodService(AppDbContext context, ILogger<MonthlyPeriodService> logger)
     {
@@ -51,13 +61,13 @@ public class MonthlyPeriodService : IMonthlyPeriodService
     public async Task<MonthlyPeriodResponseDto> CreateMonthlyPeriodAsync(CreateMonthlyPeriodDto dto)
     {
         if (dto.Month < 1 || dto.Month > 12)
-            throw new InvalidOperationException("Month must be between 1 and 12");
+            throw new InvalidOperationException("O mês deve ser entre 1 e 12.");
 
         var existingPeriod = await _context.MonthlyPeriods
             .FirstOrDefaultAsync(mp => mp.Year == dto.Year && mp.Month == dto.Month);
 
         if (existingPeriod != null)
-            throw new InvalidOperationException("Period already exists");
+            throw new InvalidOperationException($"Já existe um período para {dto.Month:D2}/{dto.Year}.");
 
         var period = new MonthlyPeriod
         {
@@ -78,17 +88,34 @@ public class MonthlyPeriodService : IMonthlyPeriodService
         var period = await _context.MonthlyPeriods.FindAsync(id);
 
         if (period == null)
-            throw new InvalidOperationException($"MonthlyPeriod with id {id} not found");
+            throw new NotFoundException($"Período {id} não encontrado.");
 
         if (dto.Status.HasValue)
+        {
+            var allowed = AllowedTransitions[period.Status];
+
+            if (!allowed.Contains(dto.Status.Value))
+                throw new InvalidOperationException(
+                    $"Transição de '{period.Status}' para '{dto.Status.Value}' não é permitida.");
+
+            if (dto.Status.Value == PeriodStatus.Closed)
+            {
+                if (!dto.ClosedById.HasValue)
+                    throw new InvalidOperationException("ClosedById é obrigatório ao fechar o período.");
+
+                period.ClosedAt = DateTime.UtcNow;
+            }
+
             period.Status = dto.Status.Value;
+        }
+
         if (dto.ClosedById.HasValue)
             period.ClosedById = dto.ClosedById.Value;
 
         _context.MonthlyPeriods.Update(period);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("MonthlyPeriod updated: {Id}", id);
+        _logger.LogInformation("MonthlyPeriod updated: {Id} -> Status: {Status}", id, period.Status);
 
         return MapToResponseDto(period);
     }
@@ -98,7 +125,10 @@ public class MonthlyPeriodService : IMonthlyPeriodService
         var period = await _context.MonthlyPeriods.FindAsync(id);
 
         if (period == null)
-            throw new InvalidOperationException($"MonthlyPeriod with id {id} not found");
+            throw new NotFoundException($"Período {id} não encontrado.");
+
+        if (period.Status == PeriodStatus.Closed)
+            throw new InvalidOperationException("Não é possível excluir um período já fechado.");
 
         _context.MonthlyPeriods.Remove(period);
         await _context.SaveChangesAsync();

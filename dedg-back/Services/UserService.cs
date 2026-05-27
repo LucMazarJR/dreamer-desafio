@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using dedg_back.Data;
+using dedg_back.Exceptions;
 using dedg_back.Models.Entities;
+using dedg_back.Models.Enums;
 using dedg_back.Models.DTOs;
 
 namespace dedg_back.Services;
@@ -16,14 +18,16 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<UserResponseDto>> GetUsersAsync()
+    public async Task<IEnumerable<UserResponseDto>> GetUsersAsync(int? managerId = null)
     {
-        var users = await _context.Users
-            .Where(u => u.IsActive)
+        var query = _context.Users.Where(u => u.IsActive);
+
+        if (managerId.HasValue)
+            query = query.Where(u => u.ManagerId == managerId.Value);
+
+        return await query
             .Select(u => MapToResponseDto(u))
             .ToListAsync();
-
-        return users;
     }
 
     public async Task<UserResponseDto?> GetUserByIdAsync(int id)
@@ -38,6 +42,23 @@ public class UserService : IUserService
 
     public async Task<UserResponseDto> CreateUserAsync(CreateUserDto dto)
     {
+        var emailInUse = await _context.Users
+            .AnyAsync(u => u.Email == dto.Email && u.IsActive);
+
+        if (emailInUse)
+            throw new InvalidOperationException("Já existe um usuário ativo com este e-mail.");
+
+        if (dto.ManagerId.HasValue)
+        {
+            var manager = await _context.Users.FindAsync(dto.ManagerId.Value);
+
+            if (manager == null || !manager.IsActive)
+                throw new InvalidOperationException("Gestor informado não encontrado.");
+
+            if (manager.Role == UserRole.Collaborator)
+                throw new InvalidOperationException("O usuário informado como gestor não possui permissão de gestão.");
+        }
+
         var user = new User
         {
             Name = dto.Name,
@@ -62,8 +83,28 @@ public class UserService : IUserService
     {
         var user = await _context.Users.FindAsync(id);
 
-        if (user == null)
-            throw new InvalidOperationException($"User with id {id} not found");
+        if (user == null || !user.IsActive)
+            throw new NotFoundException($"Usuário {id} não encontrado.");
+
+        if (dto.Email != null)
+        {
+            var emailInUse = await _context.Users
+                .AnyAsync(u => u.Email == dto.Email && u.IsActive && u.Id != id);
+
+            if (emailInUse)
+                throw new InvalidOperationException("Já existe um usuário ativo com este e-mail.");
+        }
+
+        if (dto.ManagerId.HasValue)
+        {
+            var manager = await _context.Users.FindAsync(dto.ManagerId.Value);
+
+            if (manager == null || !manager.IsActive)
+                throw new InvalidOperationException("Gestor informado não encontrado.");
+
+            if (manager.Role == UserRole.Collaborator)
+                throw new InvalidOperationException("O usuário informado como gestor não possui permissão de gestão.");
+        }
 
         if (dto.Name != null)
             user.Name = dto.Name;
@@ -88,8 +129,8 @@ public class UserService : IUserService
     {
         var user = await _context.Users.FindAsync(id);
 
-        if (user == null)
-            throw new InvalidOperationException($"User with id {id} not found");
+        if (user == null || !user.IsActive)
+            throw new NotFoundException($"Usuário {id} não encontrado.");
 
         user.IsActive = false;
         _context.Users.Update(user);

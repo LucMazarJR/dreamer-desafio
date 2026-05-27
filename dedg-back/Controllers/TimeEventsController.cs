@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using dedg_back.Exceptions;
 using dedg_back.Services;
 using dedg_back.Models.DTOs;
 
@@ -26,6 +27,24 @@ public class TimeEventsController : ControllerBase
         return Ok(events);
     }
 
+    [HttpGet("summary")]
+    [Authorize]
+    public async Task<ActionResult<TimeEventSummaryDto>> GetSummary(
+        [FromQuery] int userId,
+        [FromQuery] int year,
+        [FromQuery] int month)
+    {
+        try
+        {
+            var summary = await _timeEventService.GetSummaryAsync(userId, year, month);
+            return Ok(summary);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("{id}")]
     [Authorize]
     public async Task<ActionResult<TimeEventResponseDto>> GetTimeEvent(int id)
@@ -48,9 +67,13 @@ public class TimeEventsController : ControllerBase
             var timeEvent = await _timeEventService.CreateTimeEventAsync(dto);
             return CreatedAtAction(nameof(GetTimeEvent), new { id = timeEvent.Id }, timeEvent);
         }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -64,9 +87,13 @@ public class TimeEventsController : ControllerBase
             var timeEvent = await _timeEventService.UpdateTimeEventAsync(id, dto);
             return Ok(timeEvent);
         }
-        catch (InvalidOperationException)
+        catch (NotFoundException ex)
         {
-            return NotFound();
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -79,9 +106,13 @@ public class TimeEventsController : ControllerBase
             await _timeEventService.DeleteTimeEventAsync(id);
             return NoContent();
         }
-        catch (InvalidOperationException)
+        catch (NotFoundException ex)
         {
-            return NotFound();
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 }
