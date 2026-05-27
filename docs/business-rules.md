@@ -34,8 +34,9 @@
 - 🔵 Todos os registros são armazenados em **UTC** no banco de dados
 - 🔵 A exibição é feita no **fuso local do colaborador**, mas mostra equivalência para o usuário que está visualizando
 - 🔵 O fuso horário é definido no cadastro do colaborador e pode ser atualizado pelo RH
+- 🔵 O fuso horário é armazenado no formato **UTC offset** (ex: `UTC-3`, `UTC+1`), não no formato IANA (ex: `America/Sao_Paulo`)
 
-> **Decisões tomadas:** Armazenamento em UTC para padronização e homogeneidade dos dados. Exibição com base no fuso definido pelo RH, com equivalência visível, pensado especialmente para contextos de viagem. O RH define e atualiza o fuso para garantir consistência dos dados.
+> **Decisões tomadas:** Armazenamento em UTC para padronização e homogeneidade dos dados. Exibição com base no fuso definido pelo RH, com equivalência visível, pensado especialmente para contextos de viagem. O RH define e atualiza o fuso para garantir consistência dos dados. O formato UTC offset foi adotado por ser mais simples de aplicar na lógica de conversão, evitando dependência de uma biblioteca de nomes de zona e ambiguidade causada pelo horário de verão.
 
 ---
 

@@ -1,0 +1,192 @@
+@baseUrl = http://localhost:5000/api
+
+### ===== AUTH =====
+
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@ddgroup.com",
+  "password": "Admin@123"
+}
+
+### GET authenticated user (me)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{login.response.body.token}}
+
+###
+
+### ===== USERS - CRUD =====
+
+### CREATE user
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "name": "João Silva",
+  "email": "joao@example.com",
+  "password": "senha123",
+  "role": "Collaborator",
+  "cpf": "123.456.789-10",
+  "timeZone": "UTC-3"
+}
+
+### GET all users
+GET {{baseUrl}}/users
+Authorization: Bearer {{login.response.body.token}}
+
+### GET users filtered by manager
+GET {{baseUrl}}/users?managerId=1
+Authorization: Bearer {{login.response.body.token}}
+
+### GET user by ID
+GET {{baseUrl}}/users/1
+Authorization: Bearer {{login.response.body.token}}
+
+### UPDATE user
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "name": "João Silva Updated",
+  "email": "joao.updated@example.com",
+  "timeZone": "UTC-3"
+}
+
+### DELETE user
+DELETE {{baseUrl}}/users/1
+Authorization: Bearer {{login.response.body.token}}
+
+###
+
+### ===== TIME EVENTS - CRUD =====
+
+### CREATE time event (Entry)
+POST {{baseUrl}}/timeevents
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "userId": 1,
+  "eventType": "Entry",
+  "recordedAt": "2026-05-27T08:00:00Z",
+  "timezoneAtRecording": "UTC-3",
+  "observation": "Entrada"
+}
+
+### CREATE time event (BreakStart)
+POST {{baseUrl}}/timeevents
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "userId": 1,
+  "eventType": "BreakStart",
+  "recordedAt": "2026-05-27T12:00:00Z",
+  "timezoneAtRecording": "UTC-3"
+}
+
+### CREATE time event (BreakEnd)
+POST {{baseUrl}}/timeevents
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "userId": 1,
+  "eventType": "BreakEnd",
+  "recordedAt": "2026-05-27T13:00:00Z",
+  "timezoneAtRecording": "UTC-3"
+}
+
+### CREATE time event (Exit)
+POST {{baseUrl}}/timeevents
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "userId": 1,
+  "eventType": "Exit",
+  "recordedAt": "2026-05-27T17:00:00Z",
+  "timezoneAtRecording": "UTC-3"
+}
+
+### GET all time events
+GET {{baseUrl}}/timeevents
+Authorization: Bearer {{login.response.body.token}}
+
+### GET time events by user
+GET {{baseUrl}}/timeevents?userId=1
+Authorization: Bearer {{login.response.body.token}}
+
+### GET time events summary
+GET {{baseUrl}}/timeevents/summary?userId=1&year=2026&month=5
+Authorization: Bearer {{login.response.body.token}}
+
+### GET time event by ID
+GET {{baseUrl}}/timeevents/1
+Authorization: Bearer {{login.response.body.token}}
+
+### UPDATE time event
+PUT {{baseUrl}}/timeevents/1
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "observation": "Observação atualizada"
+}
+
+### DELETE time event
+DELETE {{baseUrl}}/timeevents/1
+Authorization: Bearer {{login.response.body.token}}
+
+###
+
+### ===== MONTHLY PERIODS - CRUD =====
+
+### CREATE monthly period
+POST {{baseUrl}}/monthlyperiods
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "year": 2026,
+  "month": 5
+}
+
+### GET all monthly periods
+GET {{baseUrl}}/monthlyperiods
+Authorization: Bearer {{login.response.body.token}}
+
+### GET monthly period by ID
+GET {{baseUrl}}/monthlyperiods/1
+Authorization: Bearer {{login.response.body.token}}
+
+### GET monthly period by date
+GET {{baseUrl}}/monthlyperiods/by-date/2026/5
+Authorization: Bearer {{login.response.body.token}}
+
+### UPDATE monthly period (move to InReview)
+PUT {{baseUrl}}/monthlyperiods/1
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "status": "InReview"
+}
+
+### UPDATE monthly period (close)
+PUT {{baseUrl}}/monthlyperiods/1
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "status": "Closed",
+  "closedById": 1
+}
+
+### DELETE monthly period
+DELETE {{baseUrl}}/monthlyperiods/1
+Authorization: Bearer {{login.response.body.token}}
