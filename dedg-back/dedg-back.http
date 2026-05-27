@@ -1,6 +1,138 @@
-@dedg_back_HostAddress = http://localhost:5101
+@baseUrl = http://localhost:5000/api
 
-GET {{dedg_back_HostAddress}}/weatherforecast/
-Accept: application/json
+### ===== USERS - CRUD =====
 
-###
+### CREATE user
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "João Silva",
+  "email": "joao@example.com",
+  "password": "senha123",
+  "role": "Collaborator",
+  "cpf": "123.456.789-10",
+  "timeZone": "UTC-03:00"
+}
+
+### GET all users
+GET {{baseUrl}}/users
+
+### GET user by ID
+GET {{baseUrl}}/users/1
+
+### UPDATE user
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+
+{
+  "name": "João Silva Updated",
+  "email": "joao.updated@example.com",
+  "timeZone": "UTC-03:00"
+}
+
+### DELETE user
+DELETE {{baseUrl}}/users/1
+
+---
+
+### ===== TIME EVENTS - CRUD =====
+
+### CREATE time event (Entry)
+POST {{baseUrl}}/timeevents
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "eventType": "Entry",
+  "recordedAt": "2026-05-27T08:00:00Z",
+  "timezoneAtRecording": "UTC-03:00",
+  "observation": "Entrada"
+}
+
+### CREATE time event (BreakStart)
+POST {{baseUrl}}/timeevents
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "eventType": "BreakStart",
+  "recordedAt": "2026-05-27T12:00:00Z",
+  "timezoneAtRecording": "UTC-03:00"
+}
+
+### CREATE time event (BreakEnd)
+POST {{baseUrl}}/timeevents
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "eventType": "BreakEnd",
+  "recordedAt": "2026-05-27T13:00:00Z",
+  "timezoneAtRecording": "UTC-03:00"
+}
+
+### CREATE time event (Exit)
+POST {{baseUrl}}/timeevents
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "eventType": "Exit",
+  "recordedAt": "2026-05-27T17:00:00Z",
+  "timezoneAtRecording": "UTC-03:00"
+}
+
+### GET all time events
+GET {{baseUrl}}/timeevents
+
+### GET time events by user
+GET {{baseUrl}}/timeevents?userId=1
+
+### GET time event by ID
+GET {{baseUrl}}/timeevents/1
+
+### UPDATE time event
+PUT {{baseUrl}}/timeevents/1
+Content-Type: application/json
+
+{
+  "observation": "Observação atualizada"
+}
+
+### DELETE time event
+DELETE {{baseUrl}}/timeevents/1
+
+---
+
+### ===== MONTHLY PERIODS - CRUD =====
+
+### CREATE monthly period
+POST {{baseUrl}}/monthlyperiods
+Content-Type: application/json
+
+{
+  "year": 2026,
+  "month": 5
+}
+
+### GET all monthly periods
+GET {{baseUrl}}/monthlyperiods
+
+### GET monthly period by ID
+GET {{baseUrl}}/monthlyperiods/1
+
+### GET monthly period by date
+GET {{baseUrl}}/monthlyperiods/by-date/2026/5
+
+### UPDATE monthly period
+PUT {{baseUrl}}/monthlyperiods/1
+Content-Type: application/json
+
+{
+  "status": "Closed",
+  "closedById": 1
+}
+
+### DELETE monthly period
+DELETE {{baseUrl}}/monthlyperiods/1
