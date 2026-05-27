@@ -10,6 +10,45 @@
 |------|-------|
 | Base URL | `http://localhost:5000/api` |
 | Formato | `application/json` |
+| Autenticação | Bearer Token (JWT) |
+
+---
+
+## Autenticação
+
+A maioria das rotas exige autenticação. O token é obtido via `POST /api/auth/login` e deve ser enviado no header de todas as requisições protegidas:
+
+```
+Authorization: Bearer {token}
+```
+
+### `POST /api/auth/login`
+Autentica o usuário e retorna um token JWT. Rota pública, não requer autenticação.
+
+**Request body**
+```json
+{
+  "email": "joao@empresa.com",
+  "password": "senhaSegura123"
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "expiresAt": "2025-01-15T16:00:00Z",
+  "userId": 1,
+  "name": "João Silva",
+  "role": "Collaborator"
+}
+```
+
+**Responses**
+| Status | Descrição |
+|--------|-----------|
+| `200 OK` | Login realizado, retorna o token e dados básicos do usuário |
+| `401 Unauthorized` | E-mail ou senha inválidos |
 
 ---
 
