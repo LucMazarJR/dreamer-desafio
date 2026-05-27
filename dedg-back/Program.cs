@@ -57,7 +57,9 @@ while (retryCount < maxRetries)
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var seederLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
             await db.Database.MigrateAsync();
+            await DatabaseSeeder.SeedAsync(db, seederLogger);
         }
         break;
     }
