@@ -6,7 +6,7 @@
 - [X] Setup do projeto e estrutura de camadas
 - [X] Configuração do banco e migrations
 - [ ] Autenticação com JWT
-- [ ] Implementação dos end points
+- [X] Implementação dos end points
 - [ ] Validação e regras de negócio
 - [ ] Implementação de testes
 - [ ] Documentação da API
