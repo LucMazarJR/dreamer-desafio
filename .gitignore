@@ -13,3 +13,4 @@ obj/
 
 # Secrets — use variáveis de ambiente ou user secrets no lugar
 appsettings.*.local.json
+appsettings.Development.json

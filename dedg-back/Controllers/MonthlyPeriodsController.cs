@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using dedg_back.Services;
 using dedg_back.Models.DTOs;
@@ -15,7 +16,9 @@ public class MonthlyPeriodsController : ControllerBase
         _monthlyPeriodService = monthlyPeriodService;
     }
 
+    // Qualquer autenticado pode consultar períodos
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<MonthlyPeriodResponseDto>>> GetMonthlyPeriods()
     {
         var periods = await _monthlyPeriodService.GetMonthlyPeriodsAsync();
@@ -23,6 +26,7 @@ public class MonthlyPeriodsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<ActionResult<MonthlyPeriodResponseDto>> GetMonthlyPeriod(int id)
     {
         var period = await _monthlyPeriodService.GetMonthlyPeriodByIdAsync(id);
@@ -34,6 +38,7 @@ public class MonthlyPeriodsController : ControllerBase
     }
 
     [HttpGet("by-date/{year}/{month}")]
+    [Authorize]
     public async Task<ActionResult<MonthlyPeriodResponseDto>> GetMonthlyPeriodByDate(int year, int month)
     {
         var period = await _monthlyPeriodService.GetMonthlyPeriodByDateAsync(year, month);
@@ -44,7 +49,9 @@ public class MonthlyPeriodsController : ControllerBase
         return Ok(period);
     }
 
+    // Abertura de períodos mensais é responsabilidade do RH
     [HttpPost]
+    [Authorize(Roles = "HrAdmin")]
     public async Task<ActionResult<MonthlyPeriodResponseDto>> CreateMonthlyPeriod(CreateMonthlyPeriodDto dto)
     {
         try
@@ -58,7 +65,9 @@ public class MonthlyPeriodsController : ControllerBase
         }
     }
 
+    // Gestor pode mover para InReview; RH pode fechar (Closed)
     [HttpPut("{id}")]
+    [Authorize(Roles = "Manager,HrAdmin")]
     public async Task<IActionResult> UpdateMonthlyPeriod(int id, UpdateMonthlyPeriodDto dto)
     {
         try
@@ -73,6 +82,7 @@ public class MonthlyPeriodsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "HrAdmin")]
     public async Task<IActionResult> DeleteMonthlyPeriod(int id)
     {
         try

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using dedg_back.Services;
 using dedg_back.Models.DTOs;
@@ -15,7 +16,10 @@ public class TimeEventsController : ControllerBase
         _timeEventService = timeEventService;
     }
 
+    // Todos os perfis podem consultar — o filtro por userId garante que colaborador
+    // acesse apenas seus próprios registros na camada de negócio
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<TimeEventResponseDto>>> GetTimeEvents([FromQuery] int? userId)
     {
         var events = await _timeEventService.GetTimeEventsAsync(userId);
@@ -23,6 +27,7 @@ public class TimeEventsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<ActionResult<TimeEventResponseDto>> GetTimeEvent(int id)
     {
         var timeEvent = await _timeEventService.GetTimeEventByIdAsync(id);
@@ -33,7 +38,9 @@ public class TimeEventsController : ControllerBase
         return Ok(timeEvent);
     }
 
+    // Colaborador registra o próprio ponto; gestor e RH também podem registrar
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<TimeEventResponseDto>> CreateTimeEvent(CreateTimeEventDto dto)
     {
         try
@@ -47,7 +54,9 @@ public class TimeEventsController : ControllerBase
         }
     }
 
+    // Correção de registros é exclusiva de gestor e RH (regra de negócio)
     [HttpPut("{id}")]
+    [Authorize(Roles = "Manager,HrAdmin")]
     public async Task<IActionResult> UpdateTimeEvent(int id, UpdateTimeEventDto dto)
     {
         try
@@ -62,6 +71,7 @@ public class TimeEventsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Manager,HrAdmin")]
     public async Task<IActionResult> DeleteTimeEvent(int id)
     {
         try
