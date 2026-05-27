@@ -13,8 +13,8 @@
 
 
 ### Frontend
-- [ ] Definição das telas e informações exibidas
-- [ ] Design da aplicação
+- [X] Definição das telas e informações exibidas
+- [X] Design da aplicação
 - [ ] Criação dos layouts
 - [ ] Conexão com o backend
 - [ ] Garantia de responsividade na aplicação
