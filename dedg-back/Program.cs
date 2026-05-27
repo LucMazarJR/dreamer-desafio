@@ -2,8 +2,11 @@ using System.Text;
 using dedg_back.Data;
 using dedg_back.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +18,57 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info = new OpenApiInfo
+        {
+            Title = "DDG, API de Jornada de Trabalho",
+            Version = "v1",
+            Description = "API para gerenciamento de jornada de trabalho do D&D Group."
+        };
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "Token JWT obtido via POST /api/auth/login"
+        };
+
+        return Task.CompletedTask;
+    });
+
+    options.AddOperationTransformer((operation, context, cancellationToken) =>
+    {
+        var requiresAuth = context.Description.ActionDescriptor.EndpointMetadata
+            .OfType<AuthorizeAttribute>()
+            .Any()
+            && !context.Description.ActionDescriptor.EndpointMetadata
+            .OfType<AllowAnonymousAttribute>()
+            .Any();
+
+        if (requiresAuth)
+        {
+            operation.Security ??= [];
+            operation.Security.Add(new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                }] = []
+            });
+        }
+
+        return Task.CompletedTask;
+    });
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -79,6 +132,11 @@ while (retryCount < maxRetries)
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "DDG API";
+        options.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
 }
 
 app.UseHttpsRedirection();

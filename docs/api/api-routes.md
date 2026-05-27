@@ -1,6 +1,6 @@
 # API Routes
 
-> A documentação interativa via Swagger estará disponível em `/swagger` quando implementada.
+> Documentação interativa disponível em `/scalar/v1` (ambiente de desenvolvimento).
 
 ---
 
