@@ -1,13 +1,13 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import {
   LucidePlus,
   LucideSearch,
-  LucideListFilter,
   LucidePencil,
   LucideFingerprint,
   LucideChevronLeft,
   LucideChevronRight,
 } from '@lucide/angular';
+import { AuthService } from '../../core/auth/auth.service';
 
 type UserStatus = 'Ativo' | 'Inativo';
 
@@ -34,6 +34,8 @@ interface Employee {
   templateUrl: './user.html',
 })
 export class User {
+  auth = inject(AuthService);
+
   // TODO: substituir por dados da API
   employees: Employee[] = [
     {

@@ -6,11 +6,13 @@
       <h1 class="text-2xl sm:text-3xl font-bold text-foreground">Gestão de Usuários</h1>
       <p class="text-sm text-muted mt-1">Gerencie os colaboradores e suas permissões de acesso ao sistema.</p>
     </div>
-    <button class="flex items-center gap-2 bg-primary hover:bg-primary-800 active:bg-primary-950 text-primary-foreground text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0">
-      <svg lucidePlus [size]="15"></svg>
-      <span class="hidden sm:inline">Novo Usuário</span>
-      <span class="sm:hidden">Novo</span>
-    </button>
+    @if (auth.isManager()) {
+      <button class="flex items-center gap-2 bg-primary hover:bg-primary-800 active:bg-primary-950 text-primary-foreground text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0">
+        <svg lucidePlus [size]="15"></svg>
+        <span class="hidden sm:inline">Novo Usuário</span>
+        <span class="sm:hidden">Novo</span>
+      </button>
+    }
   </div>
 
   <!-- Busca e filtro -->
@@ -67,9 +69,11 @@
                     <p class="text-xs text-muted truncate">{{ employee.email }}</p>
                     <p class="text-xs text-muted truncate">{{ employee.role }}</p>
                   </div>
-                  <button class="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:bg-background hover:text-foreground transition-colors cursor-pointer shrink-0">
-                    <svg lucidePencil [size]="15"></svg>
-                  </button>
+                  @if (auth.isManager()) {
+                    <button class="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:bg-background hover:text-foreground transition-colors cursor-pointer shrink-0">
+                      <svg lucidePencil [size]="15"></svg>
+                    </button>
+                  }
                 </div>
               </div>
             </div>
@@ -106,9 +110,11 @@
 
               <!-- Ações -->
               <div class="flex justify-center">
-                <button class="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:bg-background hover:text-foreground transition-colors cursor-pointer">
-                  <svg lucidePencil [size]="15"></svg>
-                </button>
+                @if (auth.isManager()) {
+                  <button class="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:bg-background hover:text-foreground transition-colors cursor-pointer">
+                    <svg lucidePencil [size]="15"></svg>
+                  </button>
+                }
               </div>
 
             </div>

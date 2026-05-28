@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideBuilding2,
@@ -9,6 +9,7 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { LayoutService } from '../../layout.service';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-side-bar',
@@ -17,11 +18,23 @@ import { LayoutService } from '../../layout.service';
 })
 export class SideBar {
   layout = inject(LayoutService);
+  auth = inject(AuthService);
 
-  // TODO: substituir por dados do usuário autenticado
-  user = {
-    name: 'Ricardo Silva',
-    role: 'Desenvolvedor Sênior',
-    initials: 'RS',
-  };
+  userName = computed(() => this.auth.currentUser()?.name ?? '');
+  userInitials = computed(() =>
+    this.userName()
+      .split(' ')
+      .slice(0, 2)
+      .map((w) => w[0] ?? '')
+      .join('')
+      .toUpperCase()
+  );
+  userRoleLabel = computed(() => {
+    const labels: Record<string, string> = {
+      Collaborator: 'Colaborador',
+      Manager: 'Gestor',
+      HrAdmin: 'Administrador RH',
+    };
+    return labels[this.auth.currentUser()?.role ?? ''] ?? '';
+  });
 }

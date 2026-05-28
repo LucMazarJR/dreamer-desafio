@@ -12,7 +12,10 @@
       <p class="text-[10px] text-muted uppercase tracking-widest">Fuso Horário</p>
       <p class="text-xs font-medium text-foreground">Brasília (GMT-3)</p>
     </div>
-    <button class="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors cursor-pointer">
+    <button
+      (click)="auth.logout()"
+      class="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors cursor-pointer"
+    >
       <svg lucideLogOut [size]="13"></svg>
       Sair
     </button>

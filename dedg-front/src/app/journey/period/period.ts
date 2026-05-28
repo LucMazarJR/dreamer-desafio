@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideCirclePlus,
   LucideRefreshCcw,
   LucideLock,
 } from '@lucide/angular';
+import { AuthService } from '../../core/auth/auth.service';
 
 type PeriodStatus = 'Open' | 'InReview' | 'Closed';
 
@@ -22,6 +23,8 @@ interface MonthlyPeriod {
   templateUrl: './period.html',
 })
 export class Period {
+  auth = inject(AuthService);
+
   // TODO: substituir por dados da API — GET /api/monthlyperiods
   periods: MonthlyPeriod[] = [
     { id: 1, year: 2026, month: 5, status: 'Open' },
