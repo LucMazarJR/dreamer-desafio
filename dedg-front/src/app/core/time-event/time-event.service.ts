@@ -37,6 +37,12 @@ export class TimeEventService {
     });
   }
 
+  getAllEvents(userId?: number) {
+    return this.http.get<TimeEventResponse[]>(`${environment.apiUrl}/api/timeevents`, {
+      ...(userId != null ? { params: { userId } } : {}),
+    });
+  }
+
   getSummary(userId: number, year: number, month: number) {
     return this.http.get<TimeEventSummary>(`${environment.apiUrl}/api/timeevents/summary`, {
       params: { userId, year, month },
@@ -46,13 +52,13 @@ export class TimeEventService {
   register(
     userId: number,
     eventType: EventType,
-    options?: { observation?: string; isTravel?: boolean },
+    options?: { observation?: string; isTravel?: boolean; timezone?: string },
   ) {
     return this.http.post<TimeEventResponse>(`${environment.apiUrl}/api/timeevents`, {
       userId,
       eventType,
       recordedAt: new Date().toISOString(),
-      timezoneAtRecording: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timezoneAtRecording: options?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
       isTravel: options?.isTravel ?? false,
       ...(options?.observation ? { observation: options.observation } : {}),
     });

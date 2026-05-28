@@ -11,6 +11,7 @@ import {
 } from '@lucide/angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { TimeEventService, TimeEventResponse, EventType } from '../../core/time-event/time-event.service';
+import { buildTimezoneOptions } from '../../core/timezone-options';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -52,6 +53,9 @@ export class Dashboard implements OnInit, OnDestroy {
   pendingEventType = signal<EventType | null>(null);
   observation = signal('');
   isTravel = signal(false);
+  selectedTimezone = signal(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+  readonly timezoneOptions = buildTimezoneOptions();
 
   private eventsLoaded = signal(false);
   private summaryLoaded = signal(false);
@@ -74,6 +78,11 @@ export class Dashboard implements OnInit, OnDestroy {
   });
 
   homeTimezone = computed(() => this.auth.currentUser()?.timezone ?? null);
+
+  recordingDiffersFromHome = computed(() => {
+    const home = this.homeTimezone();
+    return !!home && home !== this.selectedTimezone();
+  });
 
   journeyStatus = computed(() => {
     const last = this.lastEvent();
@@ -158,6 +167,7 @@ export class Dashboard implements OnInit, OnDestroy {
     this.registerError.set('');
     this.observation.set('');
     this.isTravel.set(false);
+    this.selectedTimezone.set(Intl.DateTimeFormat().resolvedOptions().timeZone);
     this.pendingEventType.set(type);
   }
 
@@ -173,6 +183,7 @@ export class Dashboard implements OnInit, OnDestroy {
     this.timeEventSvc.register(userId, type, {
       observation: this.observation() || undefined,
       isTravel: this.isTravel(),
+      timezone: this.selectedTimezone(),
     }).subscribe({
       next: (event) => {
         const today = new Date().toDateString();
@@ -199,6 +210,7 @@ export class Dashboard implements OnInit, OnDestroy {
     this.pendingEventType.set(null);
     this.observation.set('');
     this.isTravel.set(false);
+    this.selectedTimezone.set(Intl.DateTimeFormat().resolvedOptions().timeZone);
     this.registerError.set('');
   }
 
