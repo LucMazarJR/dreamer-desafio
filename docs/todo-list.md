@@ -15,9 +15,9 @@
 ### Frontend
 - [X] Definição das telas e informações exibidas
 - [X] Design da aplicação
-- [ ] Criação dos layouts
+- [X] Criação dos layouts
 - [ ] Conexão com o backend
-- [ ] Garantia de responsividade na aplicação
+- [X] Garantia de responsividade na aplicação
 
 ### Entrega
 - [X] docker-compose funcional
