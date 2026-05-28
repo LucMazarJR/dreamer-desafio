@@ -37,7 +37,7 @@
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
     <button
       type="button"
-      (click)="register('Entry')"
+      (click)="requestRegister('Entry')"
       [disabled]="!isButtonEnabled('Entry')"
       [class]="
         'bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 ' +
@@ -55,7 +55,7 @@
 
     <button
       type="button"
-      (click)="register('BreakStart')"
+      (click)="requestRegister('BreakStart')"
       [disabled]="!isButtonEnabled('BreakStart')"
       [class]="
         'bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 ' +
@@ -73,7 +73,7 @@
 
     <button
       type="button"
-      (click)="register('BreakEnd')"
+      (click)="requestRegister('BreakEnd')"
       [disabled]="!isButtonEnabled('BreakEnd')"
       [class]="
         'bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 ' +
@@ -91,7 +91,7 @@
 
     <button
       type="button"
-      (click)="register('Exit')"
+      (click)="requestRegister('Exit')"
       [disabled]="!isButtonEnabled('Exit')"
       [class]="
         'bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 ' +
@@ -108,14 +108,63 @@
     </button>
   </div>
 
-  <!-- Status da jornada / erro de registro -->
-  @if (registerError()) {
-    <p
-      class="text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5"
-    >
-      {{ registerError() }}
-    </p>
-  } @else if (journeyStatus()) {
+  <!-- Painel de confirmação de registro -->
+  @if (pendingEventType()) {
+    <div class="bg-white rounded-2xl border border-primary/40 shadow-sm p-5 flex flex-col gap-4">
+      <p class="text-sm font-semibold text-foreground">
+        Confirmar: {{ eventTypeLabel(pendingEventType()!) }}
+      </p>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-foreground">Observação (opcional)</label>
+        <textarea
+          [value]="observation()"
+          (input)="observation.set($any($event.target).value)"
+          placeholder="Ex: Trabalho remoto, viagem para cliente, home office..."
+          rows="2"
+          class="border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted/60 bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+        ></textarea>
+      </div>
+
+      <label class="flex items-center gap-2.5 text-sm cursor-pointer select-none">
+        <input
+          type="checkbox"
+          [checked]="isTravel()"
+          (change)="isTravel.set($any($event.target).checked)"
+          class="w-4 h-4 accent-primary cursor-pointer"
+        />
+        <span class="text-foreground">Em deslocamento / viagem</span>
+        <span class="text-xs text-muted">(registra no fuso atual)</span>
+      </label>
+
+      @if (registerError()) {
+        <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          {{ registerError() }}
+        </p>
+      }
+
+      <div class="flex gap-2">
+        <button
+          type="button"
+          (click)="confirmRegister()"
+          [disabled]="registering()"
+          class="flex-1 bg-primary hover:bg-primary-800 text-primary-foreground text-sm font-semibold py-2 rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ registering() ? 'Registrando...' : 'Confirmar Registro' }}
+        </button>
+        <button
+          type="button"
+          (click)="cancelRegister()"
+          class="border border-border text-foreground hover:bg-background text-sm font-semibold px-5 py-2 rounded-xl transition-colors cursor-pointer"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Status da jornada -->
+  @if (!pendingEventType() && journeyStatus()) {
     <p class="text-center text-sm text-muted">{{ journeyStatus() }}</p>
   }
 

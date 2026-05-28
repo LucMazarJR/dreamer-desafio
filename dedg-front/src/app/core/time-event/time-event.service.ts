@@ -43,12 +43,18 @@ export class TimeEventService {
     });
   }
 
-  register(userId: number, eventType: EventType) {
+  register(
+    userId: number,
+    eventType: EventType,
+    options?: { observation?: string; isTravel?: boolean },
+  ) {
     return this.http.post<TimeEventResponse>(`${environment.apiUrl}/api/timeevents`, {
       userId,
       eventType,
       recordedAt: new Date().toISOString(),
       timezoneAtRecording: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      isTravel: options?.isTravel ?? false,
+      ...(options?.observation ? { observation: options.observation } : {}),
     });
   }
 }

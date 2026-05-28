@@ -48,6 +48,11 @@ export class Dashboard implements OnInit, OnDestroy {
   registerError = signal('');
   registering = signal(false);
 
+  // Two-step registration: select event → confirmation panel → confirm
+  pendingEventType = signal<EventType | null>(null);
+  observation = signal('');
+  isTravel = signal(false);
+
   private eventsLoaded = signal(false);
   private summaryLoaded = signal(false);
   loading = computed(() => !this.eventsLoaded() || !this.summaryLoaded());
@@ -147,14 +152,28 @@ export class Dashboard implements OnInit, OnDestroy {
     });
   }
 
-  register(eventType: EventType) {
+  // Step 1: button click — shows the confirmation panel
+  requestRegister(type: EventType) {
+    if (!this.isButtonEnabled(type)) return;
+    this.registerError.set('');
+    this.observation.set('');
+    this.isTravel.set(false);
+    this.pendingEventType.set(type);
+  }
+
+  // Step 2: user confirms from the panel
+  confirmRegister() {
+    const type = this.pendingEventType();
     const userId = this.auth.currentUser()?.userId;
-    if (!userId || this.registering() || !this.isButtonEnabled(eventType)) return;
+    if (!type || !userId || this.registering()) return;
 
     this.registerError.set('');
     this.registering.set(true);
 
-    this.timeEventSvc.register(userId, eventType).subscribe({
+    this.timeEventSvc.register(userId, type, {
+      observation: this.observation() || undefined,
+      isTravel: this.isTravel(),
+    }).subscribe({
       next: (event) => {
         const today = new Date().toDateString();
         if (new Date(this.normalizeUtc(event.recordedAt)).toDateString() === today) {
@@ -164,24 +183,32 @@ export class Dashboard implements OnInit, OnDestroy {
             )
           );
         }
+        this.pendingEventType.set(null);
+        this.observation.set('');
+        this.isTravel.set(false);
         this.registering.set(false);
       },
       error: (err) => {
         this.registering.set(false);
-        this.registerError.set(
-          err?.error?.message ?? 'Erro ao registrar ponto. Tente novamente.'
-        );
+        this.registerError.set(err?.error?.message ?? 'Erro ao registrar ponto. Tente novamente.');
       },
     });
   }
 
+  cancelRegister() {
+    this.pendingEventType.set(null);
+    this.observation.set('');
+    this.isTravel.set(false);
+    this.registerError.set('');
+  }
+
   isButtonEnabled(type: EventType): boolean {
-    if (this.loading() || this.registering()) return false;
+    if (this.loading() || this.registering() || this.pendingEventType() !== null) return false;
     const ps = this.periodStatus();
     if (ps === 'Closed' || ps === 'NoPeriod') return false;
     const last = this.lastEvent()?.eventType ?? null;
     switch (type) {
-      case 'Entry':      return last === null;
+      case 'Entry':      return last === null || last === 'Exit'; // re-entry after exit allowed
       case 'BreakStart': return last === 'Entry' || last === 'BreakEnd';
       case 'BreakEnd':   return last === 'BreakStart';
       case 'Exit':       return last === 'Entry' || last === 'BreakEnd';
@@ -189,6 +216,9 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   buttonClass(type: EventType): string {
+    const pending = this.pendingEventType();
+    if (pending === type) return 'ring-2 ring-primary/60 shadow-md cursor-default transition-all';
+    if (pending !== null) return 'opacity-30 cursor-not-allowed';
     return this.isButtonEnabled(type)
       ? 'cursor-pointer hover:shadow-lg transition-shadow'
       : 'opacity-40 cursor-not-allowed';
