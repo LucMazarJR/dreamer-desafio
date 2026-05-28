@@ -1,1 +1,125 @@
-<p>history works!</p>
+<div class="flex flex-col gap-5">
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-2xl border border-border shadow-sm p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+    <button class="flex items-center gap-2 border border-border rounded-lg px-3 py-2 text-sm text-foreground hover:bg-background transition-colors cursor-pointer shrink-0">
+      <svg lucideCalendar [size]="15" class="text-primary shrink-0"></svg>
+      <span class="font-medium">Novembro 2026</span>
+      <svg lucideChevronDown [size]="13" class="text-muted ml-0.5"></svg>
+    </button>
+
+    <div class="flex items-center gap-2 border border-border rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all flex-1">
+      <svg lucideSearch [size]="15" class="text-muted shrink-0"></svg>
+      <input type="text" placeholder="Buscar por nome ou CPF..." class="flex-1 text-sm outline-none text-foreground placeholder:text-muted/60 bg-transparent min-w-0" />
+    </div>
+
+    <button class="flex items-center justify-center gap-2 bg-primary hover:bg-primary-800 active:bg-primary-950 text-primary-foreground text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer sm:ml-auto shrink-0">
+      <svg lucidePlus [size]="15"></svg>
+      <span>Ajuste Manual</span>
+    </button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+
+    <!-- Cabeçalho da tabela -->
+    <div class="hidden sm:grid sm:grid-cols-[1fr_100px_110px_160px] px-6 py-3 border-b border-border bg-background">
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Colaborador</p>
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted text-center">Data</p>
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted text-center">Hora</p>
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted text-center">Tipo de Evento</p>
+    </div>
+
+    <!-- Linhas -->
+    @for (record of records; track record.id) {
+      <div class="px-4 sm:px-6 py-4 border-b border-border last:border-b-0 hover:bg-background/60 transition-colors">
+
+        <!-- Mobile -->
+        <div class="flex items-start gap-3 sm:hidden">
+          <div [class]="'w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold ' + record.avatarColor">
+            {{ record.initials }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-foreground truncate">{{ record.name }}</p>
+                <p class="text-xs text-muted truncate">{{ record.role }}</p>
+              </div>
+              <div class="flex flex-col items-end gap-1 shrink-0">
+                <span [class]="'text-xs font-medium px-2.5 py-1 rounded-full border ' + eventBadgeClass(record)">
+                  {{ record.eventType }}
+                </span>
+                @if (record.delay) {
+                  <span class="text-[10px] font-bold text-red-500 uppercase tracking-wider">{{ record.delay }}</span>
+                }
+              </div>
+            </div>
+            <p class="text-xs text-muted mt-2">
+              {{ record.dateDay }} {{ record.dateYear }}
+              <span class="mx-1 opacity-40">·</span>
+              @if (record.isLate) {
+                <span class="text-red-500 font-semibold tabular-nums">{{ record.time }}</span>
+              } @else {
+                <span class="tabular-nums">{{ record.time }}</span>
+              }
+            </p>
+          </div>
+        </div>
+
+        <!-- Desktop -->
+        <div class="hidden sm:grid sm:grid-cols-[1fr_100px_110px_160px] sm:items-center">
+          <div class="flex items-center gap-3 min-w-0">
+            <div [class]="'w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold ' + record.avatarColor">
+              {{ record.initials }}
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-foreground truncate">{{ record.name }}</p>
+              <p class="text-xs text-muted truncate">{{ record.role }}</p>
+            </div>
+          </div>
+          <div class="text-center">
+            <p class="text-sm text-foreground">{{ record.dateDay }}</p>
+            <p class="text-xs text-muted">{{ record.dateYear }}</p>
+          </div>
+          <div class="text-center">
+            @if (record.isLate) {
+              <p class="text-sm font-semibold text-red-500 tabular-nums">{{ record.time }}</p>
+            } @else {
+              <p class="text-sm text-foreground tabular-nums">{{ record.time }}</p>
+            }
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span [class]="'text-xs font-medium px-2.5 py-1 rounded-full border ' + eventBadgeClass(record)">
+              {{ record.eventType }}
+            </span>
+            @if (record.delay) {
+              <span class="text-[10px] font-bold text-red-500 uppercase tracking-wider">{{ record.delay }}</span>
+            }
+          </div>
+        </div>
+
+      </div>
+    }
+
+    <!-- Paginação -->
+    <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-border gap-3">
+      <p class="text-xs text-muted">Exibindo 1-10 de {{ totalRecords.toLocaleString('pt-BR') }} registros</p>
+
+      <div class="flex items-center gap-1">
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted hover:bg-background transition-colors cursor-pointer">
+          <svg lucideChevronLeft [size]="14"></svg>
+        </button>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold cursor-pointer">1</button>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-foreground hover:bg-background transition-colors cursor-pointer">2</button>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-foreground hover:bg-background transition-colors cursor-pointer">3</button>
+        <span class="w-8 h-8 flex items-center justify-center text-sm text-muted">...</span>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-foreground hover:bg-background transition-colors cursor-pointer">{{ totalPages() }}</button>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted hover:bg-background transition-colors cursor-pointer">
+          <svg lucideChevronRight [size]="14"></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
