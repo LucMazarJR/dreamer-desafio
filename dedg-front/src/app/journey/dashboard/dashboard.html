@@ -158,12 +158,11 @@
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-medium text-foreground">Fuso de registro</label>
           <select
-            [value]="selectedTimezone()"
             (change)="selectedTimezone.set($any($event.target).value)"
             class="border border-amber-300 rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400"
           >
             @for (opt of timezoneOptions; track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
+              <option [value]="opt.value" [selected]="opt.value === selectedTimezone()">{{ opt.label }}</option>
             }
           </select>
         </div>

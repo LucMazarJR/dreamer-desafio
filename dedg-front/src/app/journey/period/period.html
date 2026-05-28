@@ -26,25 +26,22 @@
       <div class="flex flex-wrap gap-3">
         <div class="flex flex-col gap-1">
           <label class="text-xs text-muted">Ano</label>
-          <select
+          <input
+            type="number"
             [value]="newYear()"
             (change)="newYear.set(+$any($event.target).value)"
-            class="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-          >
-            @for (y of years; track y) {
-              <option [value]="y">{{ y }}</option>
-            }
-          </select>
+            min="2000"
+            class="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-24"
+          />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-xs text-muted">Mês</label>
           <select
-            [value]="newMonth()"
             (change)="newMonth.set(+$any($event.target).value)"
             class="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
             @for (m of months; track m) {
-              <option [value]="m">{{ monthName(m) }}</option>
+              <option [value]="m" [selected]="m === newMonth()">{{ monthName(m) }}</option>
             }
           </select>
         </div>

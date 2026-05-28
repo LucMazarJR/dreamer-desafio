@@ -27,7 +27,6 @@ export class Period implements OnInit {
   newYear = signal(new Date().getFullYear());
   newMonth = signal(new Date().getMonth() + 1);
 
-  readonly years = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - 1 + i);
   readonly months = Array.from({ length: 12 }, (_, i) => i + 1);
 
   ngOnInit() {

@@ -16,22 +16,20 @@
       <div class="flex items-center gap-1.5 border border-border rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
         <svg lucideCalendar [size]="14" class="text-muted shrink-0"></svg>
         <select
-          [value]="selectedMonth()"
           (change)="setMonth(+$any($event.target).value)"
           class="text-sm text-foreground bg-transparent outline-none cursor-pointer"
         >
           @for (m of months; track m) {
-            <option [value]="m">{{ monthName(m) }}</option>
+            <option [value]="m" [selected]="m === selectedMonth()">{{ monthName(m) }}</option>
           }
         </select>
       </div>
       <select
-        [value]="selectedYear()"
         (change)="setYear(+$any($event.target).value)"
         class="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer"
       >
         @for (y of years; track y) {
-          <option [value]="y">{{ y }}</option>
+          <option [value]="y" [selected]="y === selectedYear()">{{ y }}</option>
         }
       </select>
     </div>
@@ -70,14 +68,14 @@
 
       <!-- Cabeçalho desktop (com coluna de usuário) -->
       @if (showUserColumn()) {
-        <div class="hidden sm:grid sm:grid-cols-[1fr_110px_100px_160px] px-6 py-3 border-b border-border bg-background">
+        <div class="hidden sm:grid sm:grid-cols-[1fr_110px_120px_160px] px-6 py-3 border-b border-border bg-background">
           <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Colaborador</p>
           <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Data</p>
           <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Hora</p>
           <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Evento</p>
         </div>
       } @else {
-        <div class="hidden sm:grid sm:grid-cols-[110px_100px_160px_1fr] px-6 py-3 border-b border-border bg-background">
+        <div class="hidden sm:grid sm:grid-cols-[110px_120px_160px_1fr] px-6 py-3 border-b border-border bg-background">
           <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Data</p>
           <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Hora</p>
           <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Evento</p>
@@ -117,10 +115,15 @@
                   <p class="text-xs text-muted tabular-nums">
                     {{ formatDate(event.recordedAt, event.timezoneAtRecording) }}
                     <span class="mx-1 opacity-40">·</span>
-                    {{ formatTime(event.recordedAt, event.timezoneAtRecording) }}
+                    <span class="font-medium text-foreground">{{ displayTime(event) }}</span>
+                    <span class="ml-1 opacity-60">{{ displayTzLabel(event) }}</span>
                   </p>
                   @if (needsDualTimezone(event)) {
-                    <p class="text-xs text-amber-600">{{ formatTimeInHomeTimezone(event.recordedAt) }} (horário base)</p>
+                    <p class="text-xs text-amber-600 mt-0.5 tabular-nums">
+                      {{ viewerTime(event) }}
+                      <span class="ml-1 opacity-80">{{ viewerTzLabel(event) }}</span>
+                      <span class="ml-1">(original)</span>
+                    </p>
                   }
                 </div>
                 <span [class]="'text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ' + eventBadgeClass(event.eventType)">
@@ -142,7 +145,7 @@
 
           <!-- Desktop com coluna de usuário (Manager / HrAdmin) -->
           @if (showUserColumn()) {
-            <div class="hidden sm:grid sm:grid-cols-[1fr_110px_100px_160px] sm:items-center gap-4">
+            <div class="hidden sm:grid sm:grid-cols-[1fr_110px_120px_160px] sm:items-center gap-4">
               <div class="flex items-center gap-3 min-w-0">
                 <div [class]="'w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-[11px] font-bold ' + avatarColor(event.userId)">
                   {{ userInitials(event.userId) }}
@@ -151,9 +154,10 @@
               </div>
               <p class="text-sm text-foreground tabular-nums">{{ formatDate(event.recordedAt, event.timezoneAtRecording) }}</p>
               <div>
-                <p class="text-sm text-foreground tabular-nums">{{ formatTime(event.recordedAt, event.timezoneAtRecording) }}</p>
+                <p class="text-sm font-medium text-foreground tabular-nums">{{ displayTime(event) }}</p>
+                <p class="text-xs text-muted">{{ displayTzLabel(event) }}</p>
                 @if (needsDualTimezone(event)) {
-                  <p class="text-xs text-amber-600">{{ formatTimeInHomeTimezone(event.recordedAt) }}</p>
+                  <p class="text-xs text-amber-600 tabular-nums mt-0.5">{{ viewerTime(event) }} <span class="opacity-80">{{ viewerTzLabel(event) }}</span></p>
                 }
               </div>
               <div class="flex flex-col gap-1 items-start">
@@ -172,12 +176,13 @@
 
           <!-- Desktop sem coluna de usuário (Colaborador) -->
           @if (!showUserColumn()) {
-            <div class="hidden sm:grid sm:grid-cols-[110px_100px_160px_1fr] sm:items-center gap-4">
+            <div class="hidden sm:grid sm:grid-cols-[110px_120px_160px_1fr] sm:items-center gap-4">
               <p class="text-sm text-foreground tabular-nums">{{ formatDate(event.recordedAt, event.timezoneAtRecording) }}</p>
               <div>
-                <p class="text-sm text-foreground tabular-nums">{{ formatTime(event.recordedAt, event.timezoneAtRecording) }}</p>
+                <p class="text-sm font-medium text-foreground tabular-nums">{{ displayTime(event) }}</p>
+                <p class="text-xs text-muted">{{ displayTzLabel(event) }}</p>
                 @if (needsDualTimezone(event)) {
-                  <p class="text-xs text-amber-600">{{ formatTimeInHomeTimezone(event.recordedAt) }}</p>
+                  <p class="text-xs text-amber-600 tabular-nums mt-0.5">{{ viewerTime(event) }} <span class="opacity-80">{{ viewerTzLabel(event) }}</span></p>
                 }
               </div>
               <div class="flex flex-col gap-1 items-start">

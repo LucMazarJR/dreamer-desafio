@@ -210,6 +210,30 @@ export class History implements OnInit {
     return name.charAt(0).toUpperCase() + name.slice(1);
   }
 
+  tzShort(tz: string): string {
+    return tz.split('/').pop()?.replace(/_/g, ' ') ?? tz;
+  }
+
+  // Primary: recording timezone — the actual clock at the location
+  displayTime(event: TimeEventResponse): string {
+    return this.formatTime(event.recordedAt, event.timezoneAtRecording);
+  }
+
+  displayTzLabel(event: TimeEventResponse): string {
+    return this.tzShort(event.timezoneAtRecording);
+  }
+
+  // Secondary: viewer's home timezone — shown smaller when different
+  viewerTime(event: TimeEventResponse): string {
+    const home = this.homeTimezone();
+    return this.formatTime(event.recordedAt, home ?? event.timezoneAtRecording);
+  }
+
+  viewerTzLabel(event: TimeEventResponse): string {
+    const home = this.homeTimezone();
+    return this.tzShort(home ?? event.timezoneAtRecording);
+  }
+
   private normalizeUtc(iso: string): string {
     return /Z$|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
   }
