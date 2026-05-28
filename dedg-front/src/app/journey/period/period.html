@@ -155,7 +155,7 @@
           <!-- Ação principal -->
           <div class="pt-3">
             @if (period.status === 'Open') {
-              @if (auth.isManager()) {
+              @if (auth.isHrAdmin()) {
                 <button
                   type="button"
                   (click)="startReview(period)"
@@ -175,7 +175,7 @@
                 >
                   Revisar Registros
                 </a>
-                @if (auth.isManager()) {
+                @if (auth.isHrAdmin()) {
                   <button
                     type="button"
                     (click)="closePeriod(period)"

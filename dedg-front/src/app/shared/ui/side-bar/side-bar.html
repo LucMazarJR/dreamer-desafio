@@ -44,6 +44,8 @@
         <svg lucideUsers [size]="15" class="shrink-0"></svg>
         Usuários
       </a>
+    }
+    @if (auth.isHrAdmin()) {
       <a
         routerLink="/periods"
         routerLinkActive="!bg-primary !text-primary-foreground"
