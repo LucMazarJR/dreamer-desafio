@@ -20,5 +20,5 @@
 - [X] Garantia de responsividade na aplicação
 
 ### Entrega
-- [X] docker-compose funcional
+- [ ] docker-compose funcional para produção
 - [ ] README com instruções claras
