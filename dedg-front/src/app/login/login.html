@@ -76,12 +76,26 @@
           </label>
         </div>
 
+        @if (errorMessage()) {
+          <p class="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
+            {{ errorMessage() }}
+          </p>
+        }
+
         <button
           type="submit"
-          class="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-800 active:bg-primary-950 text-primary-foreground text-sm font-semibold py-3.5 rounded-xl transition-colors cursor-pointer mt-1"
+          [disabled]="loading()"
+          class="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-800 active:bg-primary-950 text-primary-foreground text-sm font-semibold py-3.5 rounded-xl transition-colors mt-1"
+          [class.opacity-60]="loading()"
+          [class.cursor-not-allowed]="loading()"
+          [class.cursor-pointer]="!loading()"
         >
-          Entrar na plataforma
-          <svg lucideArrowRight [size]="16" color="white"></svg>
+          @if (loading()) {
+            Entrando...
+          } @else {
+            Entrar na plataforma
+            <svg lucideArrowRight [size]="16" color="white"></svg>
+          }
         </button>
       </form>
     </div>
