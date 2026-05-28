@@ -1,5 +1,6 @@
 import { Component, signal, computed, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import {
   LucideLogIn,
   LucideCoffee,
@@ -10,6 +11,7 @@ import {
 } from '@lucide/angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { TimeEventService, TimeEventResponse, EventType } from '../../core/time-event/time-event.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,15 +21,25 @@ import { TimeEventService, TimeEventResponse, EventType } from '../../core/time-
 export class Dashboard implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private timeEventSvc = inject(TimeEventService);
+  private http = inject(HttpClient);
 
   private timer: ReturnType<typeof setInterval> | null = null;
+  private serverOffset = 0; // ms difference: server UTC - client UTC
   private now = signal(new Date());
 
+  private static readonly BRASILIA_TZ = 'America/Sao_Paulo';
+
   time = computed(() =>
-    this.now().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+    this.now().toLocaleTimeString('pt-BR', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false, timeZone: Dashboard.BRASILIA_TZ,
+    })
   );
   date = computed(() =>
-    this.now().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+    this.now().toLocaleDateString('pt-BR', {
+      day: 'numeric', month: 'long', year: 'numeric',
+      timeZone: Dashboard.BRASILIA_TZ,
+    })
   );
 
   todayEvents = signal<TimeEventResponse[]>([]);
@@ -71,7 +83,8 @@ export class Dashboard implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.timer = setInterval(() => this.now.set(new Date()), 1000);
+    this.fetchServerTime();
+    this.timer = setInterval(() => this.now.set(new Date(Date.now() + this.serverOffset)), 1000);
 
     const user = this.auth.currentUser();
     if (this.auth.isAuthenticated() && (!user || !user.timezone)) {
@@ -86,6 +99,16 @@ export class Dashboard implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.timer) clearInterval(this.timer);
+  }
+
+  private fetchServerTime() {
+    this.http.get<{ utc: string }>(`${environment.apiUrl}/api/time`).subscribe({
+      next: (res) => {
+        this.serverOffset = new Date(res.utc).getTime() - Date.now();
+        this.now.set(new Date(Date.now() + this.serverOffset));
+      },
+      error: () => { /* keep client time */ },
+    });
   }
 
   private loadData() {
