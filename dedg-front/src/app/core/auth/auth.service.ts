@@ -42,6 +42,7 @@ export class AuthService {
     const role = this._user()?.role;
     return role === 'Manager' || role === 'HrAdmin';
   });
+  isHrAdmin = computed(() => this._user()?.role === 'HrAdmin');
 
   constructor(private http: HttpClient, private router: Router) {}
 

@@ -13,7 +13,7 @@ import { TimeEventService, TimeEventResponse, EventType } from '../../core/time-
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, LucideLogIn, LucideCoffee, LucideUtensils, LucideLogOut, LucideClipboardList, LucideCircleCheckBig],
+  imports: [RouterLink, LucideLogIn, LucideCoffee, LucideUtensils, LucideLogOut, LucideCircleCheckBig],
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit, OnDestroy {

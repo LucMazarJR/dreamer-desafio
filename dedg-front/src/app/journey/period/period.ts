@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideCirclePlus,
@@ -6,32 +6,107 @@ import {
   LucideLock,
 } from '@lucide/angular';
 import { AuthService } from '../../core/auth/auth.service';
-
-type PeriodStatus = 'Open' | 'InReview' | 'Closed';
-
-interface MonthlyPeriod {
-  id: number;
-  year: number;
-  month: number;
-  status: PeriodStatus;
-  closedAt?: string; // ISO: "YYYY-MM-DD", presente somente quando Closed
-}
+import { MonthlyPeriodService, MonthlyPeriod } from '../../core/monthly-period/monthly-period.service';
 
 @Component({
   selector: 'app-period',
   imports: [RouterLink, LucideCirclePlus, LucideRefreshCcw, LucideLock],
   templateUrl: './period.html',
 })
-export class Period {
+export class Period implements OnInit {
   auth = inject(AuthService);
+  private periodSvc = inject(MonthlyPeriodService);
 
-  // TODO: substituir por dados da API — GET /api/monthlyperiods
-  periods: MonthlyPeriod[] = [
-    { id: 1, year: 2026, month: 5, status: 'Open' },
-    { id: 2, year: 2026, month: 4, status: 'InReview' },
-    { id: 3, year: 2026, month: 3, status: 'Closed', closedAt: '2026-04-03' },
-    { id: 4, year: 2026, month: 2, status: 'Closed', closedAt: '2026-03-04' },
-  ];
+  periods = signal<MonthlyPeriod[]>([]);
+  loading = signal(true);
+  loadError = signal('');
+  actionError = signal('');
+  acting = signal(false);
+
+  showNewForm = signal(false);
+  newYear = signal(new Date().getFullYear());
+  newMonth = signal(new Date().getMonth() + 1);
+
+  readonly years = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - 1 + i);
+  readonly months = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  ngOnInit() {
+    this.loadPeriods();
+  }
+
+  private loadPeriods() {
+    this.loading.set(true);
+    this.loadError.set('');
+    this.periodSvc.getAll().subscribe({
+      next: (list) => {
+        this.periods.set(list);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loadError.set('Não foi possível carregar os períodos. Tente recarregar a página.');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  toggleNewForm() {
+    this.showNewForm.update((v) => !v);
+    this.actionError.set('');
+  }
+
+  openPeriod() {
+    if (this.acting()) return;
+    this.acting.set(true);
+    this.actionError.set('');
+    this.periodSvc.create(this.newYear(), this.newMonth()).subscribe({
+      next: (period) => {
+        // Insert at the correct position (descending order)
+        this.periods.update((list) =>
+          [period, ...list].sort((a, b) => b.year !== a.year ? b.year - a.year : b.month - a.month)
+        );
+        this.showNewForm.set(false);
+        this.acting.set(false);
+      },
+      error: (err) => {
+        this.acting.set(false);
+        this.actionError.set(err?.error?.message ?? 'Erro ao criar período. Tente novamente.');
+      },
+    });
+  }
+
+  startReview(period: MonthlyPeriod) {
+    if (this.acting()) return;
+    this.acting.set(true);
+    this.actionError.set('');
+    this.periodSvc.startReview(period.id).subscribe({
+      next: (updated) => {
+        this.periods.update((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+        this.acting.set(false);
+      },
+      error: (err) => {
+        this.acting.set(false);
+        this.actionError.set(err?.error?.message ?? 'Erro ao iniciar revisão. Tente novamente.');
+      },
+    });
+  }
+
+  closePeriod(period: MonthlyPeriod) {
+    if (this.acting()) return;
+    const userId = this.auth.currentUser()?.userId;
+    if (!userId) return;
+    this.acting.set(true);
+    this.actionError.set('');
+    this.periodSvc.close(period.id, userId).subscribe({
+      next: (updated) => {
+        this.periods.update((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+        this.acting.set(false);
+      },
+      error: (err) => {
+        this.acting.set(false);
+        this.actionError.set(err?.error?.message ?? 'Erro ao fechar período. Tente novamente.');
+      },
+    });
+  }
 
   monthName(month: number): string {
     const name = new Date(2000, month - 1).toLocaleDateString('pt-BR', { month: 'long' });
@@ -48,7 +123,9 @@ export class Period {
   }
 
   formatClosedAt(iso: string): string {
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
+    const normalized = /Z$|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+    return new Date(normalized).toLocaleDateString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+    });
   }
 }
