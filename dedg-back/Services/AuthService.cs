@@ -38,7 +38,8 @@ public class AuthService : IAuthService
             ExpiresAt = expiresAt,
             UserId = user.Id,
             Name = user.Name,
-            Role = user.Role.ToString()
+            Role = user.Role.ToString(),
+            TimeZone = user.TimeZone
         };
     }
 

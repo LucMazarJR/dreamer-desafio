@@ -1,5 +1,6 @@
 using dedg_back.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace dedg_back.Data;
 
@@ -8,6 +9,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users { get; set; }
     public DbSet<TimeEvent> TimeEvents { get; set; }
     public DbSet<MonthlyPeriod> MonthlyPeriods { get; set; }
+
+    // SQL Server returns DateTime with Kind=Unspecified; this ensures UTC is preserved on round-trips
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>()
+            .HaveConversion<UtcDateTimeConverter>();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,4 +53,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .Property(m => m.Status)
             .HasConversion<string>();
     }
+}
+
+internal class UtcDateTimeConverter : ValueConverter<DateTime, DateTime>
+{
+    public UtcDateTimeConverter() : base(
+        v => v.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(v, DateTimeKind.Utc) : v.ToUniversalTime(),
+        v => DateTime.SpecifyKind(v, DateTimeKind.Utc)) { }
 }
