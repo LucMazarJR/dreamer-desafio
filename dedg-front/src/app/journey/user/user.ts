@@ -26,7 +26,6 @@ interface Employee {
   imports: [
     LucidePlus,
     LucideSearch,
-    LucideListFilter,
     LucidePencil,
     LucideFingerprint,
     LucideChevronLeft,
