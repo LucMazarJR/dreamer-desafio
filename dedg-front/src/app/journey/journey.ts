@@ -1,8 +1,12 @@
 import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { Header } from '../shared/ui/header/header';
+import { SideBar } from '../shared/ui/side-bar/side-bar';
+import { Footer } from '../shared/ui/footer/footer';
 
 @Component({
   selector: 'app-journey',
-  imports: [],
+  imports: [RouterOutlet, Header, SideBar, Footer],
   templateUrl: './journey.html',
 })
 export class Journey {}

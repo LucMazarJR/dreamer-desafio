@@ -1,1 +1,83 @@
-<p>dashboard works!</p>
+<div class="flex flex-col gap-5">
+
+  <div class="rounded-2xl bg-primary text-primary-foreground p-8 flex flex-col items-center gap-2">
+    <p class="text-[11px] tracking-[0.2em] uppercase text-primary-foreground/60">Horário de Brasília</p>
+    <p class="text-7xl font-bold tabular-nums tracking-tight">{{ time() }}</p>
+    <p class="text-sm text-primary-foreground/70">{{ date() }}</p>
+  </div>
+
+  <div class="grid grid-cols-4 gap-4">
+    <button class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-md transition-shadow cursor-pointer">
+      <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center">
+        <svg lucideLogIn [size]="22" class="text-teal-600"></svg>
+      </div>
+      <div class="text-center">
+        <p class="text-sm font-semibold text-foreground">Entrada</p>
+        <p class="text-xs text-muted mt-0.5">Início da jornada</p>
+      </div>
+    </button>
+
+    <button class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-md transition-shadow cursor-pointer">
+      <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center">
+        <svg lucideCoffee [size]="22" class="text-teal-600"></svg>
+      </div>
+      <div class="text-center">
+        <p class="text-sm font-semibold text-foreground">Início Intervalo</p>
+        <p class="text-xs text-muted mt-0.5">Pausa para descanso</p>
+      </div>
+    </button>
+
+    <button class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-md transition-shadow cursor-pointer">
+      <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center">
+        <svg lucideUtensils [size]="22" class="text-teal-600"></svg>
+      </div>
+      <div class="text-center">
+        <p class="text-sm font-semibold text-foreground">Fim Intervalo</p>
+        <p class="text-xs text-muted mt-0.5">Retorno ao trabalho</p>
+      </div>
+    </button>
+
+    <button class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-md transition-shadow cursor-pointer">
+      <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+        <svg lucideLogOut [size]="22" class="text-red-500"></svg>
+      </div>
+      <div class="text-center">
+        <p class="text-sm font-semibold text-foreground">Saída</p>
+        <p class="text-xs text-muted mt-0.5">Fim da jornada</p>
+      </div>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+
+    <div class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-foreground">Último Registro</h3>
+        <svg lucideClipboardList [size]="16" class="text-muted"></svg>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+          <svg lucideCircleCheckBig [size]="18" class="text-green-600"></svg>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold tracking-widest uppercase text-green-600">{{ lastEntry.type }}</p>
+          <p class="text-2xl font-bold text-foreground tabular-nums leading-tight">{{ lastEntry.time }}</p>
+          <p class="text-xs text-muted">{{ lastEntry.label }}</p>
+        </div>
+      </div>
+      <a class="flex justify-center w-full border border-border rounded-lg py-2 text-sm text-foreground hover:bg-background transition-colors cursor-pointer" routerLink="/history">
+        Ver histórico completo
+      </a>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col gap-4">
+      <h3 class="text-sm font-semibold text-foreground">Resumo do Dia</h3>
+      <div class="flex-1 bg-background rounded-xl p-6 flex flex-col items-center justify-center gap-1">
+        <p class="text-xs text-muted">Horas Trabalhadas</p>
+        <p class="text-5xl font-bold text-foreground tabular-nums">{{ daySummary.hoursWorked }}</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
