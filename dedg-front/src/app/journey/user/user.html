@@ -1,1 +1,135 @@
-<p>user works!</p>
+<div class="flex flex-col gap-5">
+
+  <!-- Cabeçalho da página -->
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-foreground">Gestão de Usuários</h1>
+      <p class="text-sm text-muted mt-1">Gerencie os colaboradores e suas permissões de acesso ao sistema.</p>
+    </div>
+    <button class="flex items-center gap-2 bg-primary hover:bg-primary-800 active:bg-primary-950 text-primary-foreground text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0">
+      <svg lucidePlus [size]="15"></svg>
+      <span class="hidden sm:inline">Novo Usuário</span>
+      <span class="sm:hidden">Novo</span>
+    </button>
+  </div>
+
+  <!-- Busca e filtro -->
+  <div class="bg-white rounded-2xl border border-border shadow-sm p-4 flex gap-3">
+    <div class="flex items-center gap-2 border border-border rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all flex-1">
+      <svg lucideSearch [size]="15" class="text-muted shrink-0"></svg>
+      <input type="text" placeholder="Pesquisar por nome ou e-mail..." class="flex-1 text-sm outline-none text-foreground placeholder:text-muted/60 bg-transparent min-w-0" />
+    </div>
+    <button class="flex items-center gap-2 border border-border rounded-xl px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary-800 transition-colors cursor-pointer shrink-0">
+      Pesquisar
+    </button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+
+    <!-- Cabeçalho da tabela -->
+    <div class="hidden sm:grid sm:grid-cols-[1fr_200px_180px_100px_56px] px-6 py-3 border-b border-border bg-background">
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Nome</p>
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">E-mail</p>
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Cargo</p>
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Status</p>
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-muted text-center">Ações</p>
+    </div>
+
+    <!-- Linhas -->
+    @for (employee of employees; track employee.id) {
+      <div class="px-4 sm:px-6 py-4 border-b border-border last:border-b-0 hover:bg-background/60 transition-colors">
+
+        <!-- Mobile -->
+        <div class="flex items-start gap-3 sm:hidden">
+          <div [class]="'w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold ' + employee.avatarColor">
+            {{ employee.initials }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-foreground truncate">{{ employee.name }}</p>
+                <p class="flex items-center gap-1 text-xs text-muted mt-0.5">
+                  <svg lucideFingerprint [size]="11" class="shrink-0"></svg>
+                  {{ employee.id }}
+                </p>
+              </div>
+              <span [class]="'text-xs font-medium px-2.5 py-1 rounded-full border shrink-0 ' + statusClass(employee.status)">
+                {{ employee.status }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-2 mt-2">
+              <div class="min-w-0">
+                <p class="text-xs text-muted truncate">{{ employee.email }}</p>
+                <p class="text-xs text-muted truncate">{{ employee.role }}</p>
+              </div>
+              <button class="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:bg-background hover:text-foreground transition-colors cursor-pointer shrink-0">
+                <svg lucidePencil [size]="15"></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop -->
+        <div class="hidden sm:grid sm:grid-cols-[1fr_200px_180px_100px_56px] sm:items-center">
+
+          <!-- Nome + ID -->
+          <div class="flex items-center gap-3 min-w-0">
+            <div [class]="'w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold ' + employee.avatarColor">
+              {{ employee.initials }}
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-foreground truncate">{{ employee.name }}</p>
+              <p class="flex items-center gap-1 text-xs text-muted mt-0.5">
+                <svg lucideFingerprint [size]="11" class="shrink-0"></svg>
+                {{ employee.id }}
+              </p>
+            </div>
+          </div>
+
+          <!-- E-mail -->
+          <p class="text-sm text-foreground truncate pr-4">{{ employee.email }}</p>
+
+          <!-- Cargo -->
+          <p class="text-sm text-foreground truncate pr-4">{{ employee.role }}</p>
+
+          <!-- Status -->
+          <div>
+            <span [class]="'text-xs font-medium px-2.5 py-1 rounded-full border ' + statusClass(employee.status)">
+              {{ employee.status }}
+            </span>
+          </div>
+
+          <!-- Ações -->
+          <div class="flex justify-center">
+            <button class="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:bg-background hover:text-foreground transition-colors cursor-pointer">
+              <svg lucidePencil [size]="15"></svg>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    }
+
+    <!-- Paginação -->
+    <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-border gap-3">
+      <p class="text-xs text-muted">Mostrando 1-{{ pageSize }} de {{ totalUsers }} usuários</p>
+
+      <div class="flex items-center gap-1">
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted hover:bg-background transition-colors cursor-pointer">
+          <svg lucideChevronLeft [size]="14"></svg>
+        </button>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold cursor-pointer">1</button>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-foreground hover:bg-background transition-colors cursor-pointer">2</button>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-foreground hover:bg-background transition-colors cursor-pointer">3</button>
+        <span class="w-8 h-8 flex items-center justify-center text-sm text-muted">...</span>
+        <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted hover:bg-background transition-colors cursor-pointer">
+          <svg lucideChevronRight [size]="14"></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
