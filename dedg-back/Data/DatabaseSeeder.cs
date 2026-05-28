@@ -7,24 +7,38 @@ public static class DatabaseSeeder
 {
     public static async Task SeedAsync(AppDbContext context, ILogger logger)
     {
-        if (context.Users.Any())
-            return;
+        const string adminEmail = "admin@ddgroup.com";
+        const string adminPassword = "Admin@123";
 
-        logger.LogWarning("Nenhum usuário encontrado. Criando usuário admin padrão...");
+        var admin = context.Users.FirstOrDefault(u => u.Email == adminEmail);
 
-        var admin = new User
+        if (admin == null)
         {
-            Name = "Admin",
-            Email = "admin@ddgroup.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-            Role = UserRole.HrAdmin,
-            TimeZone = "America/Sao_Paulo",
-            IsActive = true
-        };
+            logger.LogWarning("Nenhum usuário admin encontrado. Criando usuário admin padrão...");
 
-        context.Users.Add(admin);
-        await context.SaveChangesAsync();
+            admin = new User
+            {
+                Name = "Admin",
+                Email = adminEmail,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
+                Role = UserRole.HrAdmin,
+                TimeZone = "America/Sao_Paulo",
+                IsActive = true
+            };
 
-        logger.LogWarning("Usuário admin criado. Email: admin@ddgroup.com | Senha: Admin@123");
+            context.Users.Add(admin);
+            await context.SaveChangesAsync();
+
+            logger.LogWarning("Usuário admin criado. Email: {Email} | Senha: {Password}", adminEmail, adminPassword);
+            return;
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(adminPassword, admin.PasswordHash))
+        {
+            logger.LogWarning("Hash do admin inválido. Corrigindo...");
+            admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+            await context.SaveChangesAsync();
+            logger.LogWarning("Hash do admin corrigido.");
+        }
     }
 }
