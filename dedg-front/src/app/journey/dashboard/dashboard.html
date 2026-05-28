@@ -1,13 +1,49 @@
 <div class="flex flex-col gap-5">
-
-  <div class="rounded-2xl bg-primary text-primary-foreground p-6 sm:p-8 flex flex-col items-center gap-2">
-    <p class="text-[11px] tracking-[0.2em] uppercase text-primary-foreground/60">Horário de Brasília</p>
+  <!-- Relógio -->
+  <div
+    class="rounded-2xl bg-primary text-primary-foreground p-6 sm:p-8 flex flex-col items-center gap-2"
+  >
+    <p class="text-[11px] tracking-[0.2em] uppercase text-primary-foreground/60">
+      Horário de Brasília
+    </p>
     <p class="text-5xl sm:text-7xl font-bold tabular-nums tracking-tight">{{ time() }}</p>
     <p class="text-sm text-primary-foreground/70">{{ date() }}</p>
   </div>
 
+  <!-- Aviso de período -->
+  @if (periodWarning()) {
+    <div
+      [class]="
+        'flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ' +
+        (periodWarning()!.level === 'error'
+          ? 'bg-red-50 border-red-200 text-red-700'
+          : 'bg-amber-50 border-amber-200 text-amber-700')
+      "
+    >
+      {{ periodWarning()!.text }}
+    </div>
+  }
+
+  <!-- Erro de carregamento -->
+  @if (loadError()) {
+    <div
+      class="flex items-start gap-3 rounded-xl border bg-red-50 border-red-200 px-4 py-3 text-sm text-red-700"
+    >
+      {{ loadError() }}
+    </div>
+  }
+
+  <!-- Botões de registro -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-    <button class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
+    <button
+      type="button"
+      (click)="register('Entry')"
+      [disabled]="!isButtonEnabled('Entry')"
+      [class]="
+        'bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 ' +
+        buttonClass('Entry')
+      "
+    >
       <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center">
         <svg lucideLogIn [size]="22" class="text-teal-600"></svg>
       </div>
@@ -17,7 +53,15 @@
       </div>
     </button>
 
-    <button class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
+    <button
+      type="button"
+      (click)="register('BreakStart')"
+      [disabled]="!isButtonEnabled('BreakStart')"
+      [class]="
+        'bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 ' +
+        buttonClass('BreakStart')
+      "
+    >
       <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center">
         <svg lucideCoffee [size]="22" class="text-teal-600"></svg>
       </div>
@@ -27,7 +71,15 @@
       </div>
     </button>
 
-    <button class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
+    <button
+      type="button"
+      (click)="register('BreakEnd')"
+      [disabled]="!isButtonEnabled('BreakEnd')"
+      [class]="
+        'bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 ' +
+        buttonClass('BreakEnd')
+      "
+    >
       <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center">
         <svg lucideUtensils [size]="22" class="text-teal-600"></svg>
       </div>
@@ -37,7 +89,15 @@
       </div>
     </button>
 
-    <button class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
+    <button
+      type="button"
+      (click)="register('Exit')"
+      [disabled]="!isButtonEnabled('Exit')"
+      [class]="
+        'bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center gap-3 ' +
+        buttonClass('Exit')
+      "
+    >
       <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
         <svg lucideLogOut [size]="22" class="text-red-500"></svg>
       </div>
@@ -48,36 +108,75 @@
     </button>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <!-- Status da jornada / erro de registro -->
+  @if (registerError()) {
+    <p
+      class="text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5"
+    >
+      {{ registerError() }}
+    </p>
+  } @else if (journeyStatus()) {
+    <p class="text-center text-sm text-muted">{{ journeyStatus() }}</p>
+  }
 
+  <!-- Cards inferiores -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Último registro -->
     <div class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-semibold text-foreground">Último Registro</h3>
         <svg lucideClipboardList [size]="16" class="text-muted"></svg>
       </div>
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
-          <svg lucideCircleCheckBig [size]="18" class="text-green-600"></svg>
+
+      @if (loading()) {
+        <div class="flex-1 flex items-center justify-center py-4">
+          <p class="text-sm text-muted">Carregando...</p>
         </div>
-        <div>
-          <p class="text-[10px] font-bold tracking-widest uppercase text-green-600">{{ lastEntry.type }}</p>
-          <p class="text-2xl font-bold text-foreground tabular-nums leading-tight">{{ lastEntry.time }}</p>
-          <p class="text-xs text-muted">{{ lastEntry.label }}</p>
+      } @else if (lastEvent()) {
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+            <svg lucideCircleCheckBig [size]="18" class="text-green-600"></svg>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold tracking-widest uppercase text-green-600">
+              {{ eventTypeLabel(lastEvent()!.eventType) }}
+            </p>
+            <p class="text-2xl font-bold text-foreground tabular-nums leading-tight">
+              {{ formatTime(lastEvent()!.recordedAt, lastEvent()!.timezoneAtRecording) }}
+            </p>
+            <p class="text-xs text-muted">Hoje · {{ lastEvent()!.timezoneAtRecording }}</p>
+            @if (needsDualTimezone(lastEvent()!)) {
+              <p class="text-xs text-amber-600 mt-0.5">
+                {{ formatTimeInHomeTimezone(lastEvent()!.recordedAt) }} (horário base)
+              </p>
+            }
+          </div>
         </div>
-      </div>
-      <a class="flex justify-center w-full border border-border rounded-lg py-2 text-sm text-foreground hover:bg-background transition-colors cursor-pointer" routerLink="/history">
+      } @else {
+        <div class="flex-1 flex items-center justify-center py-4">
+          <p class="text-sm text-muted">Nenhum registro hoje</p>
+        </div>
+      }
+
+      <a
+        class="flex justify-center w-full border border-border rounded-lg py-2 text-sm text-foreground hover:bg-background transition-colors cursor-pointer"
+        routerLink="/history"
+      >
         Ver histórico completo
       </a>
     </div>
 
+    <!-- Resumo do dia -->
     <div class="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col gap-4">
       <h3 class="text-sm font-semibold text-foreground">Resumo do Dia</h3>
-      <div class="flex-1 bg-background rounded-xl p-6 flex flex-col items-center justify-center gap-1">
+      <div
+        class="flex-1 bg-background rounded-xl p-6 flex flex-col items-center justify-center gap-1"
+      >
         <p class="text-xs text-muted">Horas Trabalhadas</p>
-        <p class="text-5xl font-bold text-foreground tabular-nums">{{ daySummary.hoursWorked }}</p>
+        <p class="text-5xl font-bold text-foreground tabular-nums">
+          {{ loading() ? '--:--' : formatMinutes(workedMinutes()) }}
+        </p>
       </div>
     </div>
-
   </div>
-
 </div>
