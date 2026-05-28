@@ -1,11 +1,14 @@
 <header class="bg-white border-b border-border px-6 py-3 flex items-center justify-between shrink-0">
   <div class="flex items-center gap-3">
+    <button class="md:hidden p-1 rounded-lg hover:bg-background transition-colors" (click)="layout.toggle()">
+      <svg lucideMenu [size]="20" class="text-foreground"></svg>
+    </button>
     <span class="text-sm font-bold text-primary">D&amp;DG</span>
     <span class="h-4 w-px bg-border"></span>
     <span class="text-xs text-muted tracking-widest uppercase">Workspace</span>
   </div>
   <div class="flex items-center gap-4">
-    <div class="text-right">
+    <div class="text-right hidden sm:block">
       <p class="text-[10px] text-muted uppercase tracking-widest">Fuso Horário</p>
       <p class="text-xs font-medium text-foreground">Brasília (GMT-3)</p>
     </div>

@@ -1,18 +1,26 @@
-<aside class="w-60 h-full flex flex-col bg-white border-r border-border shrink-0">
+<aside
+  class="fixed md:relative inset-y-0 left-0 z-30 md:z-auto w-60 h-full flex flex-col bg-white border-r border-border shrink-0 transition-transform duration-300 md:translate-x-0"
+  [class.-translate-x-full]="!layout.sidebarOpen()"
+  [class.translate-x-0]="layout.sidebarOpen()"
+>
 
   <div class="px-4 py-5 border-b border-border flex items-center gap-2">
     <svg lucideBuilding2 [size]="18" class="text-primary shrink-0"></svg>
-    <div class="leading-tight">
+    <div class="leading-tight flex-1 min-w-0">
       <p class="text-sm font-bold text-primary">D&amp;DG Journey</p>
       <p class="text-[10px] text-muted">Gestão de Jornada</p>
     </div>
+    <button class="md:hidden p-1 rounded-lg hover:bg-background transition-colors" (click)="layout.close()">
+      <svg lucideX [size]="16" class="text-muted"></svg>
+    </button>
   </div>
 
-  <nav class="flex-1 p-2 flex flex-col gap-0.5">
+  <nav class="flex-1 p-2 flex flex-col gap-0.5 overflow-y-auto">
     <a
       routerLink="/dashboard"
       routerLinkActive="!bg-primary !text-primary-foreground"
       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-background transition-colors"
+      (click)="layout.close()"
     >
       <svg lucideLayoutDashboard [size]="15" class="shrink-0"></svg>
       Dashboard
@@ -21,6 +29,7 @@
       routerLink="/history"
       routerLinkActive="!bg-primary !text-primary-foreground"
       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-background transition-colors"
+      (click)="layout.close()"
     >
       <svg lucideHistory [size]="15" class="shrink-0"></svg>
       Histórico
@@ -29,6 +38,7 @@
       routerLink="/users"
       routerLinkActive="!bg-primary !text-primary-foreground"
       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-background transition-colors"
+      (click)="layout.close()"
     >
       <svg lucideUsers [size]="15" class="shrink-0"></svg>
       Usuários
@@ -37,6 +47,7 @@
       routerLink="/periods"
       routerLinkActive="!bg-primary !text-primary-foreground"
       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-background transition-colors"
+      (click)="layout.close()"
     >
       <svg lucideCalendar [size]="15" class="shrink-0"></svg>
       Períodos
