@@ -1,1 +1,91 @@
-<p>login works!</p>
+<div class="min-h-screen flex flex-col bg-background relative overflow-hidden">
+  <div
+    class="absolute inset-x-0 top-0 h-80 bg-linear-to-b from-background/70 to-transparent pointer-events-none"
+  ></div>
+
+  <main class="flex-1 flex flex-col items-center justify-center px-4 py-12 relative">
+    <div class="flex flex-col items-center gap-2 mb-8">
+      <svg lucideBuilding2 [size]="48" color="#041627"></svg>
+      <h1 class="text-2xl font-bold text-primary mt-2">D&amp;DG Journey</h1>
+      <p class="text-muted text-sm">Bem-vindo à Gestão de Jornada.</p>
+    </div>
+
+    <div class="w-full max-w-sm bg-white rounded-2xl border border-border shadow-sm p-8">
+      <form (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold tracking-widest uppercase" for="loginEmail">
+            E-mail corporativo
+          </label>
+          <div
+            class="flex items-center gap-2 border border-border rounded-lg px-3 py-2.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all"
+          >
+            <svg lucideMail [size]="16" color="#94a3b8" class="shrink-0"></svg>
+            <input
+              type="email"
+              id="loginEmail"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="exemplo@d&G.com.br"
+              required
+              class="flex-1 text-sm outline-none text-foreground placeholder:text-muted bg-transparent"
+            />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold tracking-widest uppercase" for="loginPassword">
+            Senha
+          </label>
+          <div
+            class="flex items-center gap-2 border border-border rounded-lg px-3 py-2.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all"
+          >
+            <svg lucideLock [size]="16" color="#94a3b8" class="shrink-0"></svg>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="••••••••"
+              required
+              id="loginPassword"
+              class="flex-1 text-sm outline-none text-foreground placeholder:text-muted bg-transparent"
+            />
+            <button
+              type="button"
+              (click)="togglePassword()"
+              class="text-muted hover:text-foreground transition-colors shrink-0 cursor-pointer"
+            >
+              @if (showPassword()) {
+                <svg lucideEyeOff [size]="16"></svg>
+              } @else {
+                <svg lucideEye [size]="16"></svg>
+              }
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="rememberMe"
+            name="rememberMe"
+            [(ngModel)]="rememberMe"
+            class="w-4 h-4 border-border rounded cursor-pointer accent-primary"
+          />
+          <label for="rememberMe" class="text-sm text-muted cursor-pointer select-none">
+            Manter conectado
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          class="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-800 active:bg-primary-950 text-primary-foreground text-sm font-semibold py-3.5 rounded-xl transition-colors cursor-pointer mt-1"
+        >
+          Entrar na plataforma
+          <svg lucideArrowRight [size]="16" color="white"></svg>
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <app-footer></app-footer>
+</div>

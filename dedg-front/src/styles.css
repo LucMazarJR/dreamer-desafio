@@ -3,9 +3,17 @@
 @import 'tailwindcss';
 
 @theme {
-    --color-background: #F7F9FB;
+    --color-primary: oklch(12% 0.042 239);
+    --color-primary-800: oklch(30% 0.042 239);
+    --color-primary-950: oklch(9% 0.042 239);
+    --color-primary-foreground: oklch(100% 0 0);
+    --color-muted: oklch(39.70% 0.009 260.72);
+    --color-background: oklch(97.7% 0.006 240);
+    --color-foreground: oklch(32% 0.008 258);
+    --color-border: oklch(80% 0.007 258);
 }
 
 body {
     background-color: var(--color-background);
+    color: var(--color-foreground);
 }
