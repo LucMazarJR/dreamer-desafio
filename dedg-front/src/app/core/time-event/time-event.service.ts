@@ -15,6 +15,14 @@ export interface TimeEventResponse {
   createdAt: string;
 }
 
+export interface UpdateTimeEventRequest {
+  eventType?: EventType;
+  recordedAt?: string;
+  timezoneAtRecording?: string;
+  isTravel?: boolean;
+  observation?: string;
+}
+
 export interface TimeEventSummary {
   userId: number;
   year: number;
@@ -47,6 +55,10 @@ export class TimeEventService {
     return this.http.get<TimeEventSummary>(`${environment.apiUrl}/api/timeevents/summary`, {
       params: { userId, year, month },
     });
+  }
+
+  update(id: number, dto: UpdateTimeEventRequest) {
+    return this.http.put<TimeEventResponse>(`${environment.apiUrl}/api/timeevents/${id}`, dto);
   }
 
   register(

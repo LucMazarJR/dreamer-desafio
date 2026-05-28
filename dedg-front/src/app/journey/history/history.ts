@@ -4,17 +4,28 @@ import {
   LucideSearch,
   LucideChevronLeft,
   LucideChevronRight,
+  LucidePencil,
 } from '@lucide/angular';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { TimeEventService, TimeEventResponse, EventType } from '../../core/time-event/time-event.service';
 import { UserApiService, UserApiResponse } from '../../core/user/user-api.service';
+import { utcOffsetMinutes } from '../../core/timezone-options';
+
+interface EditForm {
+  eventType: EventType;
+  date: string;   // YYYY-MM-DD no fuso do registro original
+  time: string;   // HH:MM no fuso do registro original
+  timezone: string;
+  isTravel: boolean;
+  observation: string;
+}
 
 const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-history',
-  imports: [LucideCalendar, LucideSearch, LucideChevronLeft, LucideChevronRight],
+  imports: [LucideCalendar, LucideSearch, LucideChevronLeft, LucideChevronRight, LucidePencil],
   templateUrl: './history.html',
 })
 export class History implements OnInit {
@@ -87,6 +98,12 @@ export class History implements OnInit {
   });
 
   homeTimezone = computed(() => this.auth.currentUser()?.timezone ?? null);
+
+  canEdit = computed(() => this.auth.isManager());
+  editingId = signal<number | null>(null);
+  editForm = signal<EditForm | null>(null);
+  saving = signal(false);
+  saveError = signal('');
 
   ngOnInit() {
     this.loadData();
@@ -232,6 +249,61 @@ export class History implements OnInit {
   viewerTzLabel(event: TimeEventResponse): string {
     const home = this.homeTimezone();
     return this.tzShort(home ?? event.timezoneAtRecording);
+  }
+
+  startEdit(event: TimeEventResponse) {
+    const dt = new Date(this.normalizeUtc(event.recordedAt));
+    const tz = event.timezoneAtRecording;
+    const date = dt.toLocaleDateString('en-CA', { timeZone: tz });
+    const time = dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz });
+    this.editingId.set(event.id);
+    this.editForm.set({ eventType: event.eventType, date, time, timezone: tz, isTravel: event.isTravel, observation: event.observation ?? '' });
+    this.saveError.set('');
+  }
+
+  cancelEdit() {
+    this.editingId.set(null);
+    this.editForm.set(null);
+    this.saveError.set('');
+  }
+
+  patchEdit(partial: Partial<EditForm>) {
+    this.editForm.update((f) => (f ? { ...f, ...partial } : null));
+  }
+
+  saveEdit() {
+    const form = this.editForm();
+    const id = this.editingId();
+    if (!form || !id || this.saving()) return;
+
+    this.saving.set(true);
+    this.saveError.set('');
+
+    this.timeEventSvc.update(id, {
+      eventType: form.eventType,
+      recordedAt: this.toUtcIso(form.date, form.time, form.timezone),
+      timezoneAtRecording: form.timezone,
+      isTravel: form.isTravel,
+      observation: form.observation || undefined,
+    }).subscribe({
+      next: (updated) => {
+        this.events.update((list) => list.map((e) => (e.id === id ? updated : e)));
+        this.editingId.set(null);
+        this.editForm.set(null);
+        this.saving.set(false);
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.saveError.set(err?.error?.message ?? 'Erro ao salvar correção. Tente novamente.');
+      },
+    });
+  }
+
+  private toUtcIso(date: string, time: string, tz: string): string {
+    // Parse date+time as if it were UTC, then subtract the tz offset to get true UTC
+    const localAsUtcMs = new Date(`${date}T${time}:00Z`).getTime();
+    const offsetMs = utcOffsetMinutes(tz) * 60_000;
+    return new Date(localAsUtcMs - offsetMs).toISOString();
   }
 
   private normalizeUtc(iso: string): string {

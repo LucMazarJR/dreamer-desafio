@@ -251,11 +251,42 @@
       <div
         class="flex-1 bg-background rounded-xl p-6 flex flex-col items-center justify-center gap-1"
       >
-        <p class="text-xs text-muted">Horas Trabalhadas</p>
+        <p class="text-xs text-muted">Horas Trabalhadas Hoje</p>
         <p class="text-5xl font-bold text-foreground tabular-nums">
           {{ loading() ? '--:--' : formatMinutes(workedMinutes()) }}
         </p>
       </div>
+
+      @if (!loading() && monthlySummary()) {
+        <div class="flex flex-col gap-2 pt-1 border-t border-border">
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Saldo do Mês</p>
+          <div class="flex items-end justify-between">
+            <div>
+              <p class="text-sm tabular-nums text-foreground font-medium">
+                {{ formatMinutes(monthlySummary()!.totalWorkedMinutes) }}
+                <span class="text-muted font-normal">/ {{ formatMinutes(monthlySummary()!.totalExpectedMinutes) }}</span>
+              </p>
+              <p class="text-[11px] text-muted mt-0.5">trabalhadas / previstas</p>
+            </div>
+            <div class="text-right">
+              @if (monthlySummary()!.overtimeMinutes > 0) {
+                <p class="text-sm font-bold text-green-600 tabular-nums">
+                  {{ formatMinutes(monthlySummary()!.overtimeMinutes, true) }}
+                </p>
+                <p class="text-[11px] text-muted">horas extras</p>
+              } @else if (monthlySummary()!.negativeMinutes > 0) {
+                <p class="text-sm font-bold text-red-500 tabular-nums">
+                  {{ formatMinutes(-monthlySummary()!.negativeMinutes, true) }}
+                </p>
+                <p class="text-[11px] text-muted">banco negativo</p>
+              } @else {
+                <p class="text-sm font-bold text-foreground tabular-nums">00:00</p>
+                <p class="text-[11px] text-muted">em dia</p>
+              }
+            </div>
+          </div>
+        </div>
+      }
     </div>
   </div>
 </div>

@@ -10,7 +10,7 @@ import {
   LucideCircleCheckBig,
 } from '@lucide/angular';
 import { AuthService } from '../../core/auth/auth.service';
-import { TimeEventService, TimeEventResponse, EventType } from '../../core/time-event/time-event.service';
+import { TimeEventService, TimeEventResponse, TimeEventSummary, EventType } from '../../core/time-event/time-event.service';
 import { buildTimezoneOptions } from '../../core/timezone-options';
 import { environment } from '../../../environments/environment';
 
@@ -45,6 +45,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   todayEvents = signal<TimeEventResponse[]>([]);
   periodStatus = signal<string | null>(null);
+  monthlySummary = signal<TimeEventSummary | null>(null);
   loadError = signal('');
   registerError = signal('');
   registering = signal(false);
@@ -155,6 +156,7 @@ export class Dashboard implements OnInit, OnDestroy {
     this.timeEventSvc.getSummary(userId, now.getFullYear(), now.getMonth() + 1).subscribe({
       next: (s) => {
         this.periodStatus.set(s.periodStatus);
+        this.monthlySummary.set(s);
         this.summaryLoaded.set(true);
       },
       error: () => this.summaryLoaded.set(true),
@@ -236,10 +238,12 @@ export class Dashboard implements OnInit, OnDestroy {
       : 'opacity-40 cursor-not-allowed';
   }
 
-  formatMinutes(minutes: number): string {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  formatMinutes(minutes: number, showSign = false): string {
+    const abs = Math.abs(minutes);
+    const h = Math.floor(abs / 60);
+    const m = abs % 60;
+    const sign = minutes < 0 ? '-' : showSign && minutes > 0 ? '+' : '';
+    return `${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
   // Appends 'Z' if the ISO string has no timezone suffix (SQL Server returns DateTime without Kind)
@@ -295,6 +299,6 @@ export class Dashboard implements OnInit, OnDestroy {
     }
 
     if (entryTime) workedMs += now.getTime() - entryTime.getTime();
-    return Math.floor(workedMs / 60000);
+    return Math.max(0, Math.floor(workedMs / 60000));
   }
 }

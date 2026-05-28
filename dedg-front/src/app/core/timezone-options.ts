@@ -4,7 +4,7 @@ export interface TimezoneOption {
   offset: number; // minutes from UTC, used for sorting
 }
 
-function utcOffsetMinutes(tz: string): number {
+export function utcOffsetMinutes(tz: string): number {
   const parts = new Intl.DateTimeFormat('en', {
     timeZone: tz,
     timeZoneName: 'shortOffset',
