@@ -57,13 +57,14 @@ Após o build, acesse:
 ```bash
 cd dedg-back
 
-# Copie e configure o appsettings local
+# Copie o arquivo de configuração local (já tem valores padrão prontos para uso)
 cp appsettings.Development.example.json appsettings.Development.json
-# Edite appsettings.Development.json com sua connection string e JWT secret
 
 dotnet run
 # API disponível em http://localhost:5000
 ```
+
+> O arquivo `appsettings.Development.example.json` já contém connection string apontando para `localhost:1433` com senha `Senha@1234` e um JWT secret de desenvolvimento. Edite apenas se o seu SQL Server usar configurações diferentes.
 
 ### Frontend
 
