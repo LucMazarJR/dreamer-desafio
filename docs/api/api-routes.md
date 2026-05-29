@@ -65,7 +65,7 @@ Retorna os dados do usuário autenticado com base no token JWT. Útil para o fro
   "email": "joao@empresa.com",
   "role": "Collaborator",
   "cpf": "123.456.789-00",
-  "timeZone": "UTC-3",
+  "timeZone": "America/Sao_Paulo",
   "managerId": 2,
   "isActive": true,
   "createdAt": "2026-01-15T10:00:00Z"
@@ -83,9 +83,26 @@ Retorna os dados do usuário autenticado com base no token JWT. Útil para o fro
 
 ## Recursos
 
+- [Time](#time-apitime)
 - [Users](#users-apiusers)
 - [Time Events](#time-events-apitimeevents)
 - [Monthly Periods](#monthly-periods-apimonthlyperiods)
+
+---
+
+## Time `/api/time`
+
+### `GET /api/time`
+Retorna o horário atual do servidor em UTC. Usado pelo frontend para validar o timestamp dos registros de ponto.
+
+**Permissão:** pública
+
+**Response** `200 OK`
+```json
+{
+  "utc": "2026-05-28T18:00:00.000Z"
+}
+```
 
 ---
 
@@ -114,7 +131,7 @@ Exemplos:
     "email": "joao@empresa.com",
     "role": "Collaborator",
     "cpf": "123.456.789-00",
-    "timeZone": "UTC-3",
+    "timeZone": "America/Sao_Paulo",
     "managerId": 2,
     "isActive": true,
     "createdAt": "2026-01-15T10:00:00Z"
@@ -155,7 +172,7 @@ Cria um novo usuário. A senha é recebida em texto puro e armazenada com BCrypt
   "password": "senhaSegura123",
   "role": "Collaborator",
   "cpf": "123.456.789-00",
-  "timeZone": "UTC-3",
+  "timeZone": "America/Sao_Paulo",
   "managerId": 2
 }
 ```
@@ -167,7 +184,7 @@ Cria um novo usuário. A senha é recebida em texto puro e armazenada com BCrypt
 | `password` | `string` | ✅ | Senha em texto puro, armazenada com BCrypt |
 | `role` | `string` | ✅ | Perfil do usuário (`Collaborator`, `Manager`, `HrAdmin`) |
 | `cpf` | `string` | ❌ | CPF |
-| `timeZone` | `string` | ✅ | Fuso horário no formato UTC offset (ex: `UTC-3`, `UTC+1`) |
+| `timeZone` | `string` | ✅ | Fuso horário no formato IANA (ex: `America/Sao_Paulo`, `Europe/Paris`) |
 | `managerId` | `int` | ❌ | ID do gestor responsável |
 
 **Responses**
@@ -193,7 +210,7 @@ Atualiza os dados de um usuário. Todos os campos são opcionais, apenas os camp
 {
   "name": "João Silva Atualizado",
   "email": "novo@empresa.com",
-  "timeZone": "UTC+1",
+  "timeZone": "Europe/Paris",
   "managerId": 3,
   "isActive": true
 }
@@ -203,7 +220,7 @@ Atualiza os dados de um usuário. Todos os campos são opcionais, apenas os camp
 |-------|------|-----------|
 | `name` | `string` | Nome completo |
 | `email` | `string` | E-mail |
-| `timeZone` | `string` | Fuso horário no formato UTC offset |
+| `timeZone` | `string` | Fuso horário no formato IANA |
 | `managerId` | `int` | ID do gestor responsável |
 | `isActive` | `bool` | Status do usuário |
 
@@ -258,7 +275,7 @@ Exemplos:
     "userId": 1,
     "eventType": "Entry",
     "recordedAt": "2026-05-27T08:00:00Z",
-    "timezoneAtRecording": "UTC-3",
+    "timezoneAtRecording": "America/Sao_Paulo",
     "isTravel": false,
     "observation": "home office",
     "createdAt": "2026-05-27T08:00:00Z"
@@ -354,7 +371,7 @@ Cria um novo registro de ponto. `recordedAt` deve ser enviado em UTC. Retorna er
 | `userId` | `int` | ✅ | ID do colaborador |
 | `eventType` | `string` | ✅ | Tipo do evento (`Entry`, `Exit`, `BreakStart`, `BreakEnd`) |
 | `recordedAt` | `datetime` | ✅ | Momento do registro em UTC |
-| `timezoneAtRecording` | `string` | ✅ | Fuso horário no momento do registro, formato UTC offset (ex: `UTC-3`) |
+| `timezoneAtRecording` | `string` | ✅ | Fuso horário no momento do registro, formato IANA (ex: `America/Sao_Paulo`) |
 | `isTravel` | `bool` | ❌ | Indica se o colaborador estava em deslocamento. Padrão: `false` |
 | `observation` | `string` | ❌ | Observação livre |
 
@@ -382,7 +399,7 @@ Atualiza um registro de ponto. Todos os campos são opcionais, apenas os campos 
 {
   "eventType": "Exit",
   "recordedAt": "2026-05-27T17:00:00Z",
-  "timezoneAtRecording": "UTC-3",
+  "timezoneAtRecording": "America/Sao_Paulo",
   "isTravel": false,
   "observation": "saída ajustada"
 }
@@ -392,7 +409,7 @@ Atualiza um registro de ponto. Todos os campos são opcionais, apenas os campos 
 |-------|------|-----------|
 | `eventType` | `string` | Tipo do evento (`Entry`, `Exit`, `BreakStart`, `BreakEnd`) |
 | `recordedAt` | `datetime` | Momento do registro em UTC |
-| `timezoneAtRecording` | `string` | Fuso horário no momento do registro, formato UTC offset |
+| `timezoneAtRecording` | `string` | Fuso horário no momento do registro, formato IANA |
 | `isTravel` | `bool` | Indica se o colaborador estava em deslocamento |
 | `observation` | `string` | Observação livre |
 

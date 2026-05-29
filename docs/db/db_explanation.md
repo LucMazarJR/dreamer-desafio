@@ -20,7 +20,7 @@ Representa todos os usuários do sistema, independente do perfil. A diferenciaç
 
 O campo `manager_id` é uma auto-referência, aponta para outro registro da mesma tabela, e permite representar a hierarquia entre gestor e colaborador sem a necessidade de tabelas separadas por perfil.
 
-O `time_zone` armazena o fuso horário do colaborador (ex: `UTC-03:00`, `UTC+01:00`), definido pelo RH no cadastro. Esse campo é a base para a exibição dos registros no horário local de cada usuário.
+O `time_zone` armazena o fuso horário do colaborador no formato IANA (ex: `America/Sao_Paulo`, `Europe/Paris`), definido pelo RH no cadastro. Esse campo é a base para a exibição dos registros no horário local de cada usuário. O formato IANA foi escolhido por lidar corretamente com horário de verão, ao contrário de offsets fixos.
 
 ---
 

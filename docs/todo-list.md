@@ -16,9 +16,9 @@
 - [X] Definição das telas e informações exibidas
 - [X] Design da aplicação
 - [X] Criação dos layouts
-- [ ] Conexão com o backend
+- [X] Conexão com o backend
 - [X] Garantia de responsividade na aplicação
 
 ### Entrega
-- [ ] docker-compose funcional para produção
-- [ ] README com instruções claras
+- [X] docker-compose funcional para produção
+- [X] README com instruções claras

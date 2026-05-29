@@ -35,8 +35,9 @@
 - 🔵 A exibição é feita no **fuso local do colaborador**, mas mostra equivalência para o usuário que está visualizando
 - 🔵 O fuso horário é definido no cadastro do colaborador e pode ser atualizado pelo RH
 - 🔵 O fuso horário é armazenado no formato **IANA** (ex: `America/Sao_Paulo`, `Europe/Paris`)
+- 🔵 O frontend exibe o offset equivalente (ex: `(UTC-03:00) Sao Paulo`) mas sempre trafega e armazena o identificador IANA
 
-> **Decisões tomadas:** Armazenamento em UTC para padronização e homogeneidade dos dados. Exibição com base no fuso definido pelo RH, com equivalência visível, pensado especialmente para contextos de viagem. O RH define e atualiza o fuso para garantir consistência dos dados. O formato IANA foi adotado por ter suporte nativo na API `Intl` do JavaScript e no .NET, e por lidar corretamente com horário de verão sem ambiguidade.
+> **Decisões tomadas:** Armazenamento em UTC para padronização e homogeneidade dos dados. Exibição com base no fuso definido pelo RH, com equivalência visível, pensado especialmente para contextos de viagem. O RH define e atualiza o fuso para garantir consistência dos dados. O formato IANA foi adotado por ter suporte nativo na API `Intl` do JavaScript e no .NET, e por lidar corretamente com horário de verão sem ambiguidade — ao contrário de offsets fixos como `UTC-3`, que não consideram DST.
 
 ---
 
