@@ -1,0 +1,358 @@
+<div class="flex flex-col gap-5">
+
+  <!-- Cabeçalho -->
+  <div>
+    <h1 class="text-2xl sm:text-3xl font-bold text-foreground">Histórico de Registros</h1>
+    <p class="text-sm text-muted mt-1">
+      @if (auth.isHrAdmin()) { Todos os registros de jornada da empresa. }
+      @else if (auth.isManager()) { Registros de jornada do seu time. }
+      @else { Seus registros de jornada. }
+    </p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-2xl border border-border shadow-sm p-4 flex flex-col sm:flex-row gap-3">
+    <div class="flex gap-2 shrink-0">
+      <div class="flex items-center gap-1.5 border border-border rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+        <svg lucideCalendar [size]="14" class="text-muted shrink-0"></svg>
+        <select
+          (change)="setMonth(+$any($event.target).value)"
+          class="text-sm text-foreground bg-transparent outline-none cursor-pointer"
+        >
+          @for (m of months; track m) {
+            <option [value]="m" [selected]="m === selectedMonth()">{{ monthName(m) }}</option>
+          }
+        </select>
+      </div>
+      <select
+        (change)="setYear(+$any($event.target).value)"
+        class="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer"
+      >
+        @for (y of years; track y) {
+          <option [value]="y" [selected]="y === selectedYear()">{{ y }}</option>
+        }
+      </select>
+    </div>
+
+    @if (showUserColumn()) {
+      <div class="flex items-center gap-2 border border-border rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all flex-1">
+        <svg lucideSearch [size]="14" class="text-muted shrink-0"></svg>
+        <input
+          type="text"
+          placeholder="Buscar por colaborador..."
+          [value]="searchQuery()"
+          (input)="setSearch($any($event.target).value)"
+          class="flex-1 text-sm outline-none text-foreground placeholder:text-muted/60 bg-transparent min-w-0"
+        />
+      </div>
+    }
+  </div>
+
+  <!-- Carregando -->
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20 text-muted text-sm">
+      Carregando histórico...
+    </div>
+  }
+
+  <!-- Erro -->
+  @if (!loading() && loadError()) {
+    <div class="rounded-xl border bg-red-50 border-red-200 px-4 py-3 text-sm text-red-700">
+      {{ loadError() }}
+    </div>
+  }
+
+  <!-- Tabela -->
+  @if (!loading() && !loadError()) {
+    <div class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+
+      <!-- Cabeçalho desktop (com coluna de usuário) -->
+      @if (showUserColumn()) {
+        <div class="hidden sm:grid sm:grid-cols-[1fr_110px_120px_160px] px-6 py-3 border-b border-border bg-background">
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Colaborador</p>
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Data</p>
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Hora</p>
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Evento</p>
+        </div>
+      } @else {
+        <div class="hidden sm:grid sm:grid-cols-[110px_120px_160px_1fr] px-6 py-3 border-b border-border bg-background">
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Data</p>
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Hora</p>
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Evento</p>
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-muted">Observação</p>
+        </div>
+      }
+
+      <!-- Estado vazio -->
+      @if (pagedEvents().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 gap-2 text-center">
+          <p class="text-sm font-medium text-foreground">
+            Nenhum registro em {{ monthName(selectedMonth()) }} {{ selectedYear() }}
+          </p>
+          @if (searchQuery()) {
+            <p class="text-xs text-muted">Tente remover o filtro de busca.</p>
+          }
+        </div>
+      }
+
+      <!-- Linhas -->
+      @for (event of pagedEvents(); track event.id) {
+        <div [class]="'px-4 sm:px-6 py-4 border-b border-border last:border-b-0 transition-colors relative ' + (editingId() === event.id ? 'bg-background/80' : 'hover:bg-background/60')">
+
+          <!-- Mobile -->
+          <div class="flex items-start gap-3 sm:hidden">
+            @if (showUserColumn()) {
+              <div [class]="'w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold ' + avatarColor(event.userId)">
+                {{ userInitials(event.userId) }}
+              </div>
+            }
+            <div class="flex-1 min-w-0">
+              @if (showUserColumn()) {
+                <p class="text-sm font-semibold text-foreground truncate">{{ userName(event.userId) }}</p>
+              }
+              <div class="flex items-start justify-between gap-2 mt-0.5">
+                <div>
+                  <p class="text-xs text-muted tabular-nums">
+                    {{ formatDate(event.recordedAt, event.timezoneAtRecording) }}
+                    <span class="mx-1 opacity-40">·</span>
+                    <span class="font-medium text-foreground">{{ displayTime(event) }}</span>
+                    <span class="ml-1 opacity-60">{{ displayTzLabel(event) }}</span>
+                  </p>
+                  @if (needsDualTimezone(event)) {
+                    <p class="text-xs text-amber-600 mt-0.5 tabular-nums">
+                      {{ viewerTime(event) }}
+                      <span class="ml-1 opacity-80">{{ viewerTzLabel(event) }}</span>
+                      <span class="ml-1">(original)</span>
+                    </p>
+                  }
+                </div>
+                <span [class]="'text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ' + eventBadgeClass(event.eventType)">
+                  {{ eventTypeLabel(event.eventType) }}
+                </span>
+              </div>
+              @if (event.isTravel || event.observation) {
+                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  @if (event.isTravel) {
+                    <span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded uppercase tracking-wide">Viagem</span>
+                  }
+                  @if (event.observation) {
+                    <span class="text-xs text-muted italic truncate">{{ event.observation }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Desktop com coluna de usuário (Manager / HrAdmin) -->
+          @if (showUserColumn()) {
+            <div class="hidden sm:grid sm:grid-cols-[1fr_110px_120px_160px] sm:items-center gap-4">
+              <div class="flex items-center gap-3 min-w-0">
+                <div [class]="'w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-[11px] font-bold ' + avatarColor(event.userId)">
+                  {{ userInitials(event.userId) }}
+                </div>
+                <p class="text-sm font-semibold text-foreground truncate">{{ userName(event.userId) }}</p>
+              </div>
+              <p class="text-sm text-foreground tabular-nums">{{ formatDate(event.recordedAt, event.timezoneAtRecording) }}</p>
+              <div>
+                <p class="text-sm font-medium text-foreground tabular-nums">{{ displayTime(event) }}</p>
+                <p class="text-xs text-muted">{{ displayTzLabel(event) }}</p>
+                @if (needsDualTimezone(event)) {
+                  <p class="text-xs text-amber-600 tabular-nums mt-0.5">{{ viewerTime(event) }} <span class="opacity-80">{{ viewerTzLabel(event) }}</span></p>
+                }
+              </div>
+              <div class="flex flex-col gap-1 items-start">
+                <span [class]="'text-xs font-medium px-2.5 py-1 rounded-full border ' + eventBadgeClass(event.eventType)">
+                  {{ eventTypeLabel(event.eventType) }}
+                </span>
+                @if (event.isTravel) {
+                  <span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded uppercase tracking-wide">Viagem</span>
+                }
+                @if (event.observation) {
+                  <p class="text-xs text-muted italic truncate max-w-36" [title]="event.observation">{{ event.observation }}</p>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Desktop sem coluna de usuário (Colaborador) -->
+          @if (!showUserColumn()) {
+            <div class="hidden sm:grid sm:grid-cols-[110px_120px_160px_1fr] sm:items-center gap-4">
+              <p class="text-sm text-foreground tabular-nums">{{ formatDate(event.recordedAt, event.timezoneAtRecording) }}</p>
+              <div>
+                <p class="text-sm font-medium text-foreground tabular-nums">{{ displayTime(event) }}</p>
+                <p class="text-xs text-muted">{{ displayTzLabel(event) }}</p>
+                @if (needsDualTimezone(event)) {
+                  <p class="text-xs text-amber-600 tabular-nums mt-0.5">{{ viewerTime(event) }} <span class="opacity-80">{{ viewerTzLabel(event) }}</span></p>
+                }
+              </div>
+              <div class="flex flex-col gap-1 items-start">
+                <span [class]="'text-xs font-medium px-2.5 py-1 rounded-full border ' + eventBadgeClass(event.eventType)">
+                  {{ eventTypeLabel(event.eventType) }}
+                </span>
+                @if (event.isTravel) {
+                  <span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded uppercase tracking-wide">Viagem</span>
+                }
+              </div>
+              <p class="text-sm text-muted italic truncate" [title]="event.observation ?? ''">
+                {{ event.observation || '—' }}
+              </p>
+            </div>
+          }
+
+          <!-- Botão editar (Gestor / HrAdmin) -->
+          @if (canEdit()) {
+            <button
+              type="button"
+              (click)="editingId() === event.id ? cancelEdit() : startEdit(event)"
+              class="absolute top-3 right-3 p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-colors"
+              [title]="editingId() === event.id ? 'Cancelar' : 'Corrigir registro'"
+            >
+              <svg lucidePencil [size]="13"></svg>
+            </button>
+          }
+
+          <!-- Painel de correção inline -->
+          @if (canEdit() && editingId() === event.id && editForm()) {
+            <div class="mt-3 pt-3 border-t border-border/60">
+              <p class="text-xs font-semibold text-foreground mb-3">Corrigir registro — fuso original: <span class="text-muted font-normal">{{ tzShort(editForm()!.timezone) }}</span></p>
+              <div class="flex flex-wrap gap-3 mb-3">
+
+                <!-- Tipo de Evento -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-[11px] text-muted">Tipo</label>
+                  <select
+                    (change)="patchEdit({ eventType: $any($event.target).value })"
+                    class="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="Entry"      [selected]="editForm()!.eventType === 'Entry'">Entrada</option>
+                    <option value="BreakStart" [selected]="editForm()!.eventType === 'BreakStart'">Saída Intervalo</option>
+                    <option value="BreakEnd"   [selected]="editForm()!.eventType === 'BreakEnd'">Retorno Intervalo</option>
+                    <option value="Exit"       [selected]="editForm()!.eventType === 'Exit'">Saída</option>
+                  </select>
+                </div>
+
+                <!-- Data -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-[11px] text-muted">Data</label>
+                  <input
+                    type="date"
+                    [value]="editForm()!.date"
+                    (change)="patchEdit({ date: $any($event.target).value })"
+                    class="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <!-- Hora -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-[11px] text-muted">Hora</label>
+                  <input
+                    type="time"
+                    [value]="editForm()!.time"
+                    (change)="patchEdit({ time: $any($event.target).value })"
+                    class="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <!-- Viagem -->
+                <div class="flex flex-col gap-1 justify-end">
+                  <label class="text-[11px] text-muted">Viagem</label>
+                  <button
+                    type="button"
+                    (click)="patchEdit({ isTravel: !editForm()!.isTravel })"
+                    [class]="'px-3 py-2 rounded-lg border text-sm font-medium transition-colors cursor-pointer ' +
+                      (editForm()!.isTravel ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-border bg-white text-muted hover:border-amber-300')"
+                  >
+                    {{ editForm()!.isTravel ? 'Viagem' : 'Normal' }}
+                  </button>
+                </div>
+
+              </div>
+
+              <!-- Observação -->
+              <div class="flex flex-col gap-1 mb-3">
+                <label class="text-[11px] text-muted">Observação</label>
+                <textarea
+                  [value]="editForm()!.observation"
+                  (input)="patchEdit({ observation: $any($event.target).value })"
+                  placeholder="Justificativa da correção..."
+                  rows="2"
+                  class="border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted/60 bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                ></textarea>
+              </div>
+
+              @if (saveError()) {
+                <p class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">{{ saveError() }}</p>
+              }
+
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  (click)="saveEdit()"
+                  [disabled]="saving()"
+                  class="bg-primary hover:bg-primary-800 text-primary-foreground text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ saving() ? 'Salvando...' : 'Salvar Correção' }}
+                </button>
+                <button
+                  type="button"
+                  (click)="cancelEdit()"
+                  class="border border-border text-foreground hover:bg-background text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+
+      <!-- Rodapé / Paginação -->
+      <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-border gap-3">
+        <p class="text-xs text-muted">
+          {{ filteredEvents().length }} {{ filteredEvents().length === 1 ? 'registro' : 'registros' }}
+          em {{ monthName(selectedMonth()) }} {{ selectedYear() }}
+        </p>
+
+        @if (totalPages() > 1) {
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              (click)="goToPage(currentPage() - 1)"
+              [disabled]="currentPage() === 1"
+              class="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted hover:bg-background transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg lucideChevronLeft [size]="14"></svg>
+            </button>
+
+            @for (page of visiblePages(); track $index) {
+              @if (page === '...') {
+                <span class="w-8 h-8 flex items-center justify-center text-sm text-muted">…</span>
+              } @else {
+                <button
+                  type="button"
+                  (click)="goToPage(page)"
+                  [class]="'w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors cursor-pointer ' +
+                    (currentPage() === page ? 'bg-primary text-primary-foreground font-semibold' : 'text-foreground hover:bg-background')"
+                >
+                  {{ page }}
+                </button>
+              }
+            }
+
+            <button
+              type="button"
+              (click)="goToPage(currentPage() + 1)"
+              [disabled]="currentPage() === totalPages()"
+              class="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted hover:bg-background transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg lucideChevronRight [size]="14"></svg>
+            </button>
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+
+</div>

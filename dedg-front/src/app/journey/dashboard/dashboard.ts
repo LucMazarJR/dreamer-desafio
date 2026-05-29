@@ -1,0 +1,304 @@
+import { Component, signal, computed, OnInit, OnDestroy, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import {
+  LucideLogIn,
+  LucideCoffee,
+  LucideUtensils,
+  LucideLogOut,
+  LucideClipboardList,
+  LucideCircleCheckBig,
+} from '@lucide/angular';
+import { AuthService } from '../../core/auth/auth.service';
+import { TimeEventService, TimeEventResponse, TimeEventSummary, EventType } from '../../core/time-event/time-event.service';
+import { buildTimezoneOptions } from '../../core/timezone-options';
+import { environment } from '../../../environments/environment';
+
+@Component({
+  selector: 'app-dashboard',
+  imports: [RouterLink, LucideLogIn, LucideCoffee, LucideUtensils, LucideLogOut, LucideCircleCheckBig],
+  templateUrl: './dashboard.html',
+})
+export class Dashboard implements OnInit, OnDestroy {
+  private auth = inject(AuthService);
+  private timeEventSvc = inject(TimeEventService);
+  private http = inject(HttpClient);
+
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private serverOffset = 0; // ms difference: server UTC - client UTC
+  private now = signal(new Date());
+
+  private static readonly BRASILIA_TZ = 'America/Sao_Paulo';
+
+  time = computed(() =>
+    this.now().toLocaleTimeString('pt-BR', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false, timeZone: Dashboard.BRASILIA_TZ,
+    })
+  );
+  date = computed(() =>
+    this.now().toLocaleDateString('pt-BR', {
+      day: 'numeric', month: 'long', year: 'numeric',
+      timeZone: Dashboard.BRASILIA_TZ,
+    })
+  );
+
+  todayEvents = signal<TimeEventResponse[]>([]);
+  periodStatus = signal<string | null>(null);
+  monthlySummary = signal<TimeEventSummary | null>(null);
+  loadError = signal('');
+  registerError = signal('');
+  registering = signal(false);
+
+  // Two-step registration: select event → confirmation panel → confirm
+  pendingEventType = signal<EventType | null>(null);
+  observation = signal('');
+  isTravel = signal(false);
+  selectedTimezone = signal(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+  readonly timezoneOptions = buildTimezoneOptions();
+
+  private eventsLoaded = signal(false);
+  private summaryLoaded = signal(false);
+  loading = computed(() => !this.eventsLoaded() || !this.summaryLoaded());
+
+  lastEvent = computed(() => {
+    const events = this.todayEvents();
+    return events.length ? events[events.length - 1] : null;
+  });
+
+  // Live counter — recomputes every second while user is clocked in
+  workedMinutes = computed(() => this.computeWorkedMinutes(this.todayEvents(), this.now()));
+
+  periodWarning = computed(() => {
+    const ps = this.periodStatus();
+    if (ps === 'Closed') return { level: 'error', text: 'O período atual está fechado. Novos registros não são permitidos.' };
+    if (ps === 'NoPeriod') return { level: 'error', text: 'Não há período aberto para este mês. Contate o gestor.' };
+    if (ps === 'InReview') return { level: 'warning', text: 'O período está em revisão pelo gestor. Você ainda pode registrar ponto.' };
+    return null;
+  });
+
+  homeTimezone = computed(() => this.auth.currentUser()?.timezone ?? null);
+
+  recordingDiffersFromHome = computed(() => {
+    const home = this.homeTimezone();
+    return !!home && home !== this.selectedTimezone();
+  });
+
+  journeyStatus = computed(() => {
+    const last = this.lastEvent();
+    if (!last) return null;
+    const time = this.formatTime(last.recordedAt, last.timezoneAtRecording);
+    switch (last.eventType) {
+      case 'Entry':      return `Jornada em andamento desde ${time}.`;
+      case 'BreakStart': return `Em intervalo desde ${time}.`;
+      case 'BreakEnd':   return `Retornou do intervalo às ${time}.`;
+      case 'Exit':       return `Jornada encerrada às ${time}. Bom descanso!`;
+    }
+  });
+
+  ngOnInit() {
+    this.fetchServerTime();
+    this.timer = setInterval(() => this.now.set(new Date(Date.now() + this.serverOffset)), 1000);
+
+    const user = this.auth.currentUser();
+    if (this.auth.isAuthenticated() && (!user || !user.timezone)) {
+      this.auth.hydrateUser().subscribe({
+        next: () => this.loadData(),
+        error: () => this.auth.logout(),
+      });
+    } else {
+      this.loadData();
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.timer) clearInterval(this.timer);
+  }
+
+  private fetchServerTime() {
+    this.http.get<{ utc: string }>(`${environment.apiUrl}/api/time`).subscribe({
+      next: (res) => {
+        this.serverOffset = new Date(res.utc).getTime() - Date.now();
+        this.now.set(new Date(Date.now() + this.serverOffset));
+      },
+      error: () => { /* keep client time */ },
+    });
+  }
+
+  private loadData() {
+    const userId = this.auth.currentUser()?.userId;
+    if (!userId) return;
+    this.loadTodayEvents(userId);
+    this.loadSummary(userId);
+  }
+
+  private loadTodayEvents(userId: number) {
+    this.timeEventSvc.getEvents(userId).subscribe({
+      next: (events) => {
+        const today = new Date().toDateString();
+        this.todayEvents.set(
+          events
+            .filter((e) => new Date(this.normalizeUtc(e.recordedAt)).toDateString() === today)
+            .sort((a, b) => new Date(this.normalizeUtc(a.recordedAt)).getTime() - new Date(this.normalizeUtc(b.recordedAt)).getTime())
+        );
+        this.eventsLoaded.set(true);
+      },
+      error: () => {
+        this.loadError.set('Não foi possível carregar os registros do dia. Tente recarregar a página.');
+        this.eventsLoaded.set(true);
+      },
+    });
+  }
+
+  private loadSummary(userId: number) {
+    const now = new Date();
+    this.timeEventSvc.getSummary(userId, now.getFullYear(), now.getMonth() + 1).subscribe({
+      next: (s) => {
+        this.periodStatus.set(s.periodStatus);
+        this.monthlySummary.set(s);
+        this.summaryLoaded.set(true);
+      },
+      error: () => this.summaryLoaded.set(true),
+    });
+  }
+
+  // Step 1: button click — shows the confirmation panel
+  requestRegister(type: EventType) {
+    if (!this.isButtonEnabled(type)) return;
+    this.registerError.set('');
+    this.observation.set('');
+    this.isTravel.set(false);
+    this.selectedTimezone.set(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    this.pendingEventType.set(type);
+  }
+
+  // Step 2: user confirms from the panel
+  confirmRegister() {
+    const type = this.pendingEventType();
+    const userId = this.auth.currentUser()?.userId;
+    if (!type || !userId || this.registering()) return;
+
+    this.registerError.set('');
+    this.registering.set(true);
+
+    this.timeEventSvc.register(userId, type, {
+      observation: this.observation() || undefined,
+      isTravel: this.isTravel(),
+      timezone: this.selectedTimezone(),
+    }).subscribe({
+      next: (event) => {
+        const today = new Date().toDateString();
+        if (new Date(this.normalizeUtc(event.recordedAt)).toDateString() === today) {
+          this.todayEvents.update((list) =>
+            [...list, event].sort(
+              (a, b) => new Date(this.normalizeUtc(a.recordedAt)).getTime() - new Date(this.normalizeUtc(b.recordedAt)).getTime()
+            )
+          );
+        }
+        this.pendingEventType.set(null);
+        this.observation.set('');
+        this.isTravel.set(false);
+        this.registering.set(false);
+      },
+      error: (err) => {
+        this.registering.set(false);
+        this.registerError.set(err?.error?.message ?? 'Erro ao registrar ponto. Tente novamente.');
+      },
+    });
+  }
+
+  cancelRegister() {
+    this.pendingEventType.set(null);
+    this.observation.set('');
+    this.isTravel.set(false);
+    this.selectedTimezone.set(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    this.registerError.set('');
+  }
+
+  isButtonEnabled(type: EventType): boolean {
+    if (this.loading() || this.registering() || this.pendingEventType() !== null) return false;
+    const ps = this.periodStatus();
+    if (ps === 'Closed' || ps === 'NoPeriod') return false;
+    const last = this.lastEvent()?.eventType ?? null;
+    switch (type) {
+      case 'Entry':      return last === null || last === 'Exit'; // re-entry after exit allowed
+      case 'BreakStart': return last === 'Entry' || last === 'BreakEnd';
+      case 'BreakEnd':   return last === 'BreakStart';
+      case 'Exit':       return last === 'Entry' || last === 'BreakEnd';
+    }
+  }
+
+  buttonClass(type: EventType): string {
+    const pending = this.pendingEventType();
+    if (pending === type) return 'ring-2 ring-primary/60 shadow-md cursor-default transition-all';
+    if (pending !== null) return 'opacity-30 cursor-not-allowed';
+    return this.isButtonEnabled(type)
+      ? 'cursor-pointer hover:shadow-lg transition-shadow'
+      : 'opacity-40 cursor-not-allowed';
+  }
+
+  formatMinutes(minutes: number, showSign = false): string {
+    const abs = Math.abs(minutes);
+    const h = Math.floor(abs / 60);
+    const m = abs % 60;
+    const sign = minutes < 0 ? '-' : showSign && minutes > 0 ? '+' : '';
+    return `${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  // Appends 'Z' if the ISO string has no timezone suffix (SQL Server returns DateTime without Kind)
+  private normalizeUtc(iso: string): string {
+    return /Z$|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+  }
+
+  formatTime(iso: string, tz?: string): string {
+    return new Date(this.normalizeUtc(iso)).toLocaleTimeString('pt-BR', {
+      hour: '2-digit', minute: '2-digit', hour12: false,
+      ...(tz ? { timeZone: tz } : {}),
+    });
+  }
+
+  needsDualTimezone(event: TimeEventResponse): boolean {
+    const home = this.homeTimezone();
+    return !!home && home !== event.timezoneAtRecording;
+  }
+
+  formatTimeInHomeTimezone(iso: string): string {
+    const tz = this.homeTimezone();
+    return this.formatTime(iso, tz ?? undefined);
+  }
+
+  eventTypeLabel(type: EventType): string {
+    const labels: Record<EventType, string> = {
+      Entry: 'Entrada Realizada',
+      Exit: 'Saída Registrada',
+      BreakStart: 'Saída p/ Intervalo',
+      BreakEnd: 'Retorno de Intervalo',
+    };
+    return labels[type];
+  }
+
+  private computeWorkedMinutes(events: TimeEventResponse[], now: Date): number {
+    let workedMs = 0;
+    let entryTime: Date | null = null;
+
+    for (const event of events) {
+      const t = new Date(this.normalizeUtc(event.recordedAt));
+      switch (event.eventType) {
+        case 'Entry':
+          entryTime = t;
+          break;
+        case 'BreakStart':
+        case 'Exit':
+          if (entryTime) { workedMs += t.getTime() - entryTime.getTime(); entryTime = null; }
+          break;
+        case 'BreakEnd':
+          entryTime = t;
+          break;
+      }
+    }
+
+    if (entryTime) workedMs += now.getTime() - entryTime.getTime();
+    return Math.max(0, Math.floor(workedMs / 60000));
+  }
+}

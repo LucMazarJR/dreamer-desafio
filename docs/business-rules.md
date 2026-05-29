@@ -34,8 +34,9 @@
 - 🔵 Todos os registros são armazenados em **UTC** no banco de dados
 - 🔵 A exibição é feita no **fuso local do colaborador**, mas mostra equivalência para o usuário que está visualizando
 - 🔵 O fuso horário é definido no cadastro do colaborador e pode ser atualizado pelo RH
+- 🔵 O fuso horário é armazenado no formato **IANA** (ex: `America/Sao_Paulo`, `Europe/Paris`)
 
-> **Decisões tomadas:** Armazenamento em UTC para padronização e homogeneidade dos dados. Exibição com base no fuso definido pelo RH, com equivalência visível, pensado especialmente para contextos de viagem. O RH define e atualiza o fuso para garantir consistência dos dados.
+> **Decisões tomadas:** Armazenamento em UTC para padronização e homogeneidade dos dados. Exibição com base no fuso definido pelo RH, com equivalência visível, pensado especialmente para contextos de viagem. O RH define e atualiza o fuso para garantir consistência dos dados. O formato IANA foi adotado por ter suporte nativo na API `Intl` do JavaScript e no .NET, e por lidar corretamente com horário de verão sem ambiguidade.
 
 ---
 
@@ -62,11 +63,12 @@
 ## Fechamento Mensal
 
 - O período de apuração é **mensal**
-- O fechamento é realizado pelo **RH**
+- 🔵 Todo o ciclo de vida do período é gerenciado exclusivamente pelo **RH / Admin**
+- O RH abre o período, inicia a revisão e realiza o fechamento definitivo
 - Após o fechamento, os registros do período ficam **bloqueados para edição**
-- 🔵 Antes do fechamento, o gestor pode revisar e aprovar a jornada do time
+- 🔵 O gestor acompanha a jornada do time via histórico, mas não gerencia períodos
 
-> **Decisões tomadas:** Incluir a etapa de revisão pelo gestor antes do fechamento pelo RH cria uma camada de validação mais próxima do time, o gestor conhece o contexto das ausências e ajustes melhor do que o RH, o que reduz erros no fechamento.
+> **Decisões tomadas:** Centralizar o controle de períodos no RH evita conflitos entre múltiplos gestores agindo sobre o mesmo ciclo. Períodos são uma entidade administrativa da empresa, não do time — por isso faz mais sentido que o RH seja o único responsável pelo fluxo completo (Open → InReview → Closed).
 
 ---
 

@@ -3,22 +3,22 @@
 - [X] Modelagem do banco de dados
 
 ### Backend
-- [ ] Setup do projeto e estrutura de camadas
-- [ ] Configuração do banco e migrations
-- [ ] Autenticação com JWT
-- [ ] Implementação dos end points
-- [ ] Validação e regras de negócio
+- [X] Setup do projeto e estrutura de camadas
+- [X] Configuração do banco e migrations
+- [X] Autenticação com JWT
+- [X] Implementação dos end points
+- [X] Validação e regras de negócio
 - [ ] Implementação de testes
-- [ ] Documentação da API
+- [X] Documentação da API
 
 
 ### Frontend
-- [ ] Definição das telas e informações exibidas
-- [ ] Design da aplicação
-- [ ] Criação dos layouts
+- [X] Definição das telas e informações exibidas
+- [X] Design da aplicação
+- [X] Criação dos layouts
 - [ ] Conexão com o backend
-- [ ] Garantia de responsividade na aplicação
+- [X] Garantia de responsividade na aplicação
 
 ### Entrega
-- [ ] docker-compose funcional
+- [ ] docker-compose funcional para produção
 - [ ] README com instruções claras
